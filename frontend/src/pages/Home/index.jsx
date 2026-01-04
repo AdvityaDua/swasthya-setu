@@ -4,7 +4,8 @@ import Header from '@/components/layout/Header'
 import HeroSection from './HeroSection'
 import HowItWorks from './HowItWorks'
 import WhySection from './WhySection'
-
+import LoginPage from './LoginPage'
+import RegisterPage from './RegisterPage'
 
 function HomePage() {
   return (
@@ -20,4 +21,4 @@ function HomePage() {
   )
 }
 
-export default HomePage
+export { HomePage, LoginPage, RegisterPage }

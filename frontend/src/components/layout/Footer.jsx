@@ -18,7 +18,7 @@ export default function Footer() {
               <span className="text-2xl font-bold text-primary tracking-tight">Swasthya-Setu</span>
             </div>
             <p className="text-muted-foreground max-w-sm leading-relaxed">
-              Powered by Government of India (placeholder). A national initiative to digitize healthcare while
+              Powered by Government of India. A national initiative to digitize healthcare while
               maintaining the highest standards of clinical safety.
             </p>
           </div>
