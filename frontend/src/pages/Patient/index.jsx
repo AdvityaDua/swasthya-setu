@@ -1,9 +1,8 @@
 import React from 'react'
+import Referrals from './Referrals'
+import MyTests from './MyTests'
+import TestDetail from './TestDetail'
+import Profile from './Profile'
+import Dashboard from './Dashboard'
 
-function PatientDashboardPage() {
-  return (
-    <div>PatientDashboard</div>
-  )
-}
-
-export { PatientDashboardPage }
+export { Dashboard, TestDetail, MyTests, Referrals, Profile }

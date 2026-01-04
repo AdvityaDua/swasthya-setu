@@ -2,20 +2,27 @@ from rest_framework import serializers
 from core.models import PatientProfile, DiagnosticTest, AIInferenceResult, Appointment, Referral
 
 class PatientProfileSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='user.full_name')
-    email = serializers.EmailField(source='user.email')
-    abha_id = serializers.CharField(source='user.abha_id')
+    # User-level fields
+    name = serializers.CharField(source="user.full_name", read_only=True)
+    phone = serializers.CharField(source="user.phone", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+    abha_id = serializers.CharField(source="user.abha_id", read_only=True)
+    role = serializers.CharField(source="user.role", read_only=True)
+    created_at = serializers.DateTimeField(source="user.created_at", read_only=True)
 
     class Meta:
         model = PatientProfile
         fields = [
-            'name',
-            'email',
-            'abha_id',
-            'blood_group',
-            'chronic_conditions',
-            'emergency_contact',
-            'address',
+            "name",
+            "phone",
+            "email",
+            "abha_id",
+            "role",
+            "created_at",
+            "blood_group",
+            "chronic_conditions",
+            "emergency_contact",
+            "address",
         ]
 
 
