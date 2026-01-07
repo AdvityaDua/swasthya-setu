@@ -27,12 +27,14 @@ export default function Header() {
             alt="Government of India Emblem"
             className="rounded-none border-none bg-transparent"
           />
+          <NavLink to='/'>
           <div className="flex flex-col border-l border-border pl-4">
             <span className="text-xl md:text-2xl font-bold text-primary tracking-tight">Swasthya-Setu</span>
             <span className="text-[10px] md:text-xs text-muted-foreground font-medium uppercase tracking-widest">
               Healthcare Portal
             </span>
           </div>
+          </NavLink>
         </div>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">

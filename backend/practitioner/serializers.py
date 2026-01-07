@@ -25,7 +25,7 @@ class DiagnosticTestCreateSerializer(serializers.ModelSerializer):
 
 
 class DiagnosticImageUploadSerializer(serializers.Serializer):
-    image = serializers.ImageField()
+    image = serializers.FileField()
 
 
 class ClinicalContextSerializer(serializers.ModelSerializer):

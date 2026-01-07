@@ -140,7 +140,7 @@ class DiagnosticTest(models.Model):
     practitioner = models.ForeignKey(PractitionerProfile, on_delete=models.SET_NULL, null=True)
 
     test_type = models.CharField(max_length=50, choices=TEST_TYPE_CHOICES)
-    raw_image = models.ImageField(upload_to='diagnostic_images/')
+    raw_image = models.FileField(upload_to='diagnostic_images/')
 
     test_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)

@@ -15,8 +15,10 @@ from core.models import (
     PatientProfile,
     DiagnosticTest,
     ClinicalContext,
-    Referral
+    Referral,
+    AIInferenceResult
 )
+from practitioner.services.ai_service import run_ai_and_generate_report
 
 
 class PatientLookupView(APIView):
@@ -100,30 +102,6 @@ class ClinicalContextCreateView(APIView):
         return Response({"message": "Clinical context saved"})
 
 
-from practitioner.services.ai import run_ai
-from core.models import AIInferenceResult
-
-
-class RunAIInferenceView(APIView):
-    permission_classes = [IsAuthenticated, IsPractitioner]
-
-    def post(self, request, test_id):
-        test = get_object_or_404(DiagnosticTest, id=test_id)
-
-        result = run_ai(test)
-
-        AIInferenceResult.objects.create(
-            test=test,
-            model_name=test.test_type,
-            **result
-        )
-
-        test.status = "AI_DONE"
-        test.save()
-
-        return Response(result)
-    
-
 class ViewAIResultView(APIView):
     permission_classes = [IsAuthenticated, IsPractitioner]
 
@@ -152,3 +130,21 @@ class ReferralCreateView(APIView):
         test.save()
 
         return Response({"message": "Referral created"})
+
+
+class RunAITestView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def post(self, request, test_id):
+        test = get_object_or_404(
+            DiagnosticTest,
+            id=test_id,
+            practitioner=request.user.practitioner_profile
+        )
+
+        ai_result = run_ai_and_generate_report(test)
+
+        test.status = "AI_DONE"
+        test.save(update_fields=["status"])
+
+        return Response(AIResultSerializer(ai_result).data)

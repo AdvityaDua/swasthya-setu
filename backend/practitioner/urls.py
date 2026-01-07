@@ -4,7 +4,7 @@ from practitioner.views import (
     DiagnosticTestCreateView,
     DiagnosticImageUploadView,
     ClinicalContextCreateView,
-    RunAIInferenceView,
+    RunAITestView,
     ViewAIResultView,
     ReferralCreateView
 )
@@ -15,7 +15,7 @@ urlpatterns = [
     path("tests/create/", DiagnosticTestCreateView.as_view()),
     path("tests/<uuid:test_id>/upload/", DiagnosticImageUploadView.as_view()),
     path("tests/<uuid:test_id>/context/", ClinicalContextCreateView.as_view()),
-    path("tests/<uuid:test_id>/run-ai/", RunAIInferenceView.as_view()),
+    path("tests/<uuid:test_id>/run-ai/", RunAITestView.as_view()),
     path("tests/<uuid:test_id>/ai-result/", ViewAIResultView.as_view()),
     path("tests/<uuid:test_id>/refer/", ReferralCreateView.as_view()),
 ]
