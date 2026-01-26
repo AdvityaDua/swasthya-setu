@@ -13,13 +13,15 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: () => ({
         url: "auth/logout/",
         method: "POST",
+        credentials: "include",
       }),
     }),
     refresh: builder.mutation({
-        query: () => ({
-            url: "auth/refresh-token/",
-            method: "POST",
-        }),
+      query: () => ({
+        url: "auth/refresh-token/",
+        method: "POST",
+        credentials: "include",
+      }),
     }),
     register: builder.mutation({
       query: (data) => ({

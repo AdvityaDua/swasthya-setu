@@ -4,7 +4,8 @@ from core.models import (
     DiagnosticTest,
     ClinicalContext,
     AIInferenceResult,
-    Referral
+    Referral,
+    PractitionerProfile,
 )
 
 
@@ -44,5 +45,19 @@ class ReferralCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Referral
         fields = ["referred_to", "urgency", "reason"]
+
+
+class PractitionerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PractitionerProfile
+        fields = [
+            "designation",
+            "diagnostic_center_name",
+            "center_location",
+            "experience_years",
+            "services_offered",
+            "latitude",
+            "longitude",
+        ]
 
 

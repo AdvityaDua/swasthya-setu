@@ -148,3 +148,19 @@ class RunAITestView(APIView):
         test.save(update_fields=["status"])
 
         return Response(AIResultSerializer(ai_result).data)
+
+
+class PractitionerMeView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def get(self, request):
+        profile = request.user.practitioner_profile
+        serializer = PractitionerProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        profile = request.user.practitioner_profile
+        serializer = PractitionerProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

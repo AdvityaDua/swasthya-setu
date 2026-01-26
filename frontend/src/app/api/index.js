@@ -1,5 +1,5 @@
 import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react'
-import {setToken, logout, removeToken} from '../slices/userSlice'
+import { login as loginAction, logout, removeToken } from '../slices/userSlice'
 
 const baseQuery = fetchBaseQuery({
     baseUrl: 'http://127.0.0.1:8000/api/',
@@ -28,9 +28,9 @@ const baseQueryWithRefresh = async (args, api, extraOptions) => {
             api,
             extraOptions);
         
-        if (refreshResult.data){
+        if (refreshResult.data?.access) {
             console.log("Token refreshed");
-            api.dispatch(setToken(refreshResult.data));
+            api.dispatch(loginAction(refreshResult.data));
             result = await baseQuery(args, api, extraOptions);
         }
         else{

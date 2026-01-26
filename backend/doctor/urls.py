@@ -3,10 +3,12 @@ from doctor.views import (
     DoctorReferralListView,
     DoctorCaseDetailView,
     DoctorReviewCreateView,
-    DoctorCloseReferralView
+    DoctorCloseReferralView,
+    DoctorMeView,
 )
 
 urlpatterns = [
+    path("me/", DoctorMeView.as_view()),
     path("referrals/", DoctorReferralListView.as_view()),
     path("cases/<uuid:test_id>/", DoctorCaseDetailView.as_view()),
     path("referrals/<int:referral_id>/review/", DoctorReviewCreateView.as_view()),

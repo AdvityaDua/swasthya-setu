@@ -2,6 +2,24 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 import uuid
 
+
+LANGUAGE_CHOICES = (
+    ('en', 'English'),
+    ('hi', 'Hindi'),
+    ('ta', 'Tamil'),
+    ('te', 'Telugu'),
+    ('bn', 'Bengali'),
+    ('mr', 'Marathi'),
+    ('gu', 'Gujarati'),
+    ('kn', 'Kannada'),
+    ('ml', 'Malayalam'),
+    ('pa', 'Punjabi'),
+    ('or', 'Odia'),
+    ('as', 'Assamese'),
+    ('ur', 'Urdu'),
+)
+
+
 class UserManager(BaseUserManager):
     def create_user(self, phone, password=None, **extra_fields):
         if not phone:
@@ -33,7 +51,8 @@ class User(AbstractBaseUser):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
+    preferred_language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='en')
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
 
@@ -55,7 +74,6 @@ class PatientProfile(models.Model):
     address = models.TextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
         return f"PatientProfile - {self.user.full_name}"
 
@@ -77,6 +95,9 @@ class DoctorProfile(models.Model):
     is_teleconsult_available = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    availability_timings = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"Dr. {self.user.full_name} ({self.specialization})"
@@ -89,11 +110,14 @@ class PractitionerProfile(models.Model):
     designation = models.CharField(max_length=100)
     diagnostic_center_name = models.CharField(max_length=255)
     center_location = models.CharField(max_length=255)
-
     experience_years = models.PositiveIntegerField()
-
+    services_offered = models.JSONField(null=True, blank=True)
+    
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     def __str__(self):
         return f"{self.user.full_name} - {self.diagnostic_center_name}"
 

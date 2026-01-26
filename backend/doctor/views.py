@@ -6,12 +6,10 @@ from doctor.permissions import IsDoctor
 from doctor.serializers import (
     DoctorReferralListSerializer,
     DoctorCaseDetailSerializer,
-    DoctorReviewSerializer
+    DoctorReviewSerializer,
+    DoctorProfileSerializer,
 )
-from core.models import (
-    Referral,
-    DiagnosticTest
-)
+from core.models import Referral, DiagnosticTest
 from doctor.models import DoctorReview
 
 
@@ -84,3 +82,19 @@ class DoctorCloseReferralView(APIView):
         referral.save()
 
         return Response({"message": "Referral closed"})
+
+
+class DoctorMeView(APIView):
+    permission_classes = [IsAuthenticated, IsDoctor]
+
+    def get(self, request):
+        profile = request.user.doctor_profile
+        serializer = DoctorProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        profile = request.user.doctor_profile
+        serializer = DoctorProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

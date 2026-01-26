@@ -66,6 +66,7 @@ class LoginView(APIView):
 
 class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
 
@@ -74,16 +75,24 @@ class RefreshTokenView(APIView):
 
         try:
             token = RefreshToken(refresh_token)
+            user_id = token.payload.get('user_id')
+            if not user_id:
+                return Response({'error': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
+            user = User.objects.get(id=user_id)
             new_access_token = str(token.access_token)
-
             return Response(
                 {
-                    'access': new_access_token
+                    'message': 'Token refreshed',
+                    'access': new_access_token,
+                    'name': user.full_name,
+                    'role': user.role,
+                    'phone': user.phone,
                 },
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
-
-        except Exception as e:
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception:
             return Response({'error': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -93,5 +102,9 @@ class LogoutView(APIView):
             {'message': 'Logout successful'},
             status=status.HTTP_200_OK
         )
-        response.delete_cookie('refresh_token')
+        # Delete cookie with same settings as when it was set
+        response.delete_cookie(
+            key='refresh_token',
+            samesite='None',
+        )
         return response

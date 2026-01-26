@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { login as loginAction } from "../../app/slices/userSlice";
+import { dashboardPathForRole } from "../../components/AuthRestore";
 const LoginPage = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -53,9 +54,7 @@ const LoginPage = () => {
       setSuccessMessage("");
     }
   }, [error]);
-  useEffect(() => {
-    
-    }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -68,13 +67,11 @@ const LoginPage = () => {
     try {
       const userData = await login({ phone, password }).unwrap();
       dispatch(loginAction(userData));
-      setSuccessMessage("Login successful! You are being redirected to your dashboard.");
+      setSuccessMessage("Login successful! Redirecting to your dashboard…");
       setPhone("");
-      setPassword("");      
-      // Add a delay to show success before navigating
-      setTimeout(() => {
-        navigate("/patient");
-      }, 2000); // 2 second delay
+      setPassword("");
+      const target = dashboardPathForRole(userData.role);
+      setTimeout(() => navigate(target), 800);
     } catch (err) {
       console.error("Login failed:", err);
     }

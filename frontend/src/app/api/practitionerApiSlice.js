@@ -51,8 +51,14 @@ export const practitionerApiSlice = apiSlice.injectEndpoints({
     }),
     getPractitionerProfile: builder.query({
       query: () => "practitioner/me/",
-      pollingInterval: 15000,
       keepUnusedDataFor: 0,
+    }),
+    updatePractitionerProfile: builder.mutation({
+      query: (body) => ({
+        url: "practitioner/me/",
+        method: "PATCH",
+        body,
+      }),
     }),
   }),
 });
@@ -66,5 +72,6 @@ export const {
   useReferToDoctorMutation,
   useGetPractitionerActiveTestsQuery,
   useGetPractitionerProfileQuery,
+  useUpdatePractitionerProfileMutation,
 } = practitionerApiSlice;
 

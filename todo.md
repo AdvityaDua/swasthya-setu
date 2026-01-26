@@ -8,26 +8,26 @@
 ## Phase 1: Core Foundations
 
 ### 1.1 User Registration & Profile Setup
-- [ ] Add PatientProfile fields (date_of_birth, blood_group, known_allergies, chronic_conditions) to registration flow
-- [ ] Create PractitionerProfile during registration when role=PRACTITIONER
-- [ ] Create DoctorProfile during registration when role=DOCTOR
-- [ ] Add role-specific profile creation serializers in backend
-- [ ] Implement multi-step registration form for role-specific data collection
-- [ ] Add preferred language selection field to User model
-- [ ] Add preferred language dropdown to registration form
+- [x] Add PatientProfile fields (date_of_birth, blood_group, known_allergies, chronic_conditions) to registration flow
+- [x] Create PractitionerProfile during registration when role=PRACTITIONER
+- [x] Create DoctorProfile during registration when role=DOCTOR
+- [x] Add role-specific profile creation serializers in backend
+- [x] Implement multi-step registration form for role-specific data collection
+- [x] Add preferred language selection field to User model
+- [x] Add preferred language dropdown to registration form
 
 ### 1.2 Authentication Enhancements
-- [ ] Fix login redirect logic to properly route DOCTOR role to /doctor dashboard
-- [ ] Persist user state to localStorage for session recovery on page refresh
-- [ ] Add loading state handling during authentication check on protected routes
+- [x] Fix login redirect logic to properly route DOCTOR role to /doctor dashboard
+- [x] Persist user state to call refresh token API for session recovery on page refresh
+- [x] Add loading state handling during authentication check on protected routes
 
 ### 1.3 Backend Model Completions
-- [ ] Add `preferred_language` field to User model (choices: en, hi, ta, te, bn, mr, gu, kn, ml, pa, or)
+- [x] Add `preferred_language` field to User model (choices: en, hi, ta, te, bn, mr, gu, kn, ml, pa, or)
 - [ ] Add `past_surgeries` field to PatientProfile model (per PRD 5.1.1)
 - [ ] Add `current_medications` field to PatientProfile model (per PRD 5.1.1)
 - [ ] Add `lifestyle_indicators` field to PatientProfile model (per PRD 5.1.1)
-- [ ] Add `availability_timings` JSONField to DoctorProfile model (per PRD 5.1.3)
-- [ ] Add `latitude` and `longitude` DecimalFields to PractitionerProfile model
+- [x] Add `availability_timings` JSONField to DoctorProfile model (per PRD 5.1.3)
+- [x] Add `latitude` and `longitude` DecimalFields to PractitionerProfile model
 - [ ] Add `services_offered` JSONField to PractitionerProfile model (list of test types)
 - [ ] Create ConsultationRequest model with: patient, doctor, status, requested_at, scheduled_time, meet_link, calendar_event_id
 - [ ] Add migration for new model fields
@@ -132,18 +132,17 @@
 - [ ] Add status filter (UPLOADED, AI_DONE, REFERRED, CLOSED)
 
 #### Practitioner Profile & Location
-- [ ] Add `latitude` and `longitude` fields to PractitionerProfile model
-- [ ] Add migration for location coordinate fields
-- [ ] Create PractitionerProfile.jsx page at `/practitioner/profile`
-- [ ] Add route for profile in App.jsx
-- [ ] Create backend endpoint GET `/practitioner/me/` for profile data
-- [ ] Display: designation, diagnostic_center_name, center_location, experience_years
-- [ ] Add profile edit functionality
-- [ ] Install react-leaflet and leaflet packages in frontend
-- [ ] Add location picker map component using Leaflet + OpenStreetMap
-- [ ] Allow practitioner to pin clinic/center location on map
-- [ ] Save latitude/longitude coordinates on profile update
-- [ ] Create PATCH `/practitioner/me/` endpoint for profile updates including location
+- [x] Add `latitude` and `longitude` fields to PractitionerProfile model
+- [x] Add migration for location coordinate fields
+- [x] Create PractitionerProfile.jsx page at `/practitioner/profile`
+- [x] Add route for profile in App.jsx
+- [x] Create backend endpoint GET `/practitioner/me/` for profile data
+- [x] Display: designation, diagnostic_center_name, center_location, experience_years
+- [x] Add profile edit functionality
+- [x] Add location picker map component (Mapbox; search + click to set location)
+- [x] Allow practitioner to pin clinic/center location on map
+- [x] Save latitude/longitude coordinates on profile update
+- [x] Create PATCH `/practitioner/me/` endpoint for profile updates including location
 
 #### Doctor Selection for Referral
 - [ ] Create backend endpoint GET `/practitioner/doctors/` to list doctors

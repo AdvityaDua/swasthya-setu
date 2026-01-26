@@ -1,8 +1,5 @@
 from rest_framework import serializers
-from core.models import (
-    Referral,
-    
-)
+from core.models import Referral, DoctorProfile
 from doctor.models import DoctorReview
 
 class DoctorReferralListSerializer(serializers.ModelSerializer):
@@ -58,3 +55,18 @@ class DoctorReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = DoctorReview
         fields = ["decision", "notes"]
+
+
+class DoctorProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DoctorProfile
+        fields = [
+            "specialization",
+            "hospital_name",
+            "registration_number",
+            "years_of_experience",
+            "is_teleconsult_available",
+            "latitude",
+            "longitude",
+            "availability_timings",
+        ]
