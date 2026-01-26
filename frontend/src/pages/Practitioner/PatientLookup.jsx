@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 
 const PatientLookup = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchBy, setSearchBy] = useState("phone"); // 'phone' or 'abhi_id'
+  const [searchBy, setSearchBy] = useState("phone"); // 'phone' or 'abha_id'
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   // Debounce the search query to avoid excessive API calls
@@ -22,7 +22,7 @@ const PatientLookup = () => {
   }, [searchQuery]);
 
   const { data: patient, isLoading, isSuccess, isError, error } = useSearchPatientQuery(
-    searchBy === "phone" ? { phone: debouncedSearchQuery } : { abhi_id: debouncedSearchQuery },
+        searchBy === "phone" ? { phone: debouncedSearchQuery } : { abha_id: debouncedSearchQuery },
     {
       skip: !debouncedSearchQuery,
     }
@@ -56,7 +56,7 @@ const PatientLookup = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-grow"
                 />
-                <Button type="button" variant="outline" onClick={() => setSearchBy(searchBy === "phone" ? "abhi_id" : "phone")}>
+                <Button type="button" variant="outline" onClick={() => setSearchBy(searchBy === "phone" ? "abha_id" : "phone")}>
                   Toggle to {searchBy === "phone" ? "ABHA ID" : "Phone"}
                 </Button>
                 <Button type="submit" disabled={isLoading}>
@@ -82,7 +82,7 @@ const PatientLookup = () => {
         </Alert>
       )}
 
-      {isSuccess && patient && patient.id ? (
+      {isSuccess && patient && patient.length > 0 && patient[0].id ? (
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
             <CardTitle className="text-green-700">Patient Found</CardTitle>
@@ -91,35 +91,35 @@ const PatientLookup = () => {
           <CardContent className="grid gap-4">
             <div className="flex items-center space-x-3">
               <UserCircleIcon className="h-6 w-6 text-green-600" />
-              <p className="text-lg font-semibold text-green-900">{patient.name}</p>
+              <p className="text-lg font-semibold text-green-900">{patient[0].name}</p>
             </div>
             <div className="grid gap-2">
               <div className="flex items-center space-x-2 text-green-800">
                 <Phone className="h-4 w-4" />
-                <p className="text-sm">Phone: {patient.phone}</p>
+                <p className="text-sm">Phone: {patient[0].phone}</p>
               </div>
-              {patient.email && (
+              {patient[0].email && (
                 <div className="flex items-center space-x-2 text-green-800">
                   <Mail className="h-4 w-4" />
-                  <p className="text-sm">Email: {patient.email}</p>
+                  <p className="text-sm">Email: {patient[0].email}</p>
                 </div>
               )}
-              {patient.abhi_id && (
+              {patient.abha_id && (
                 <div className="flex items-center space-x-2 text-green-800">
                   <CalendarDays className="h-4 w-4" />
-                  <p className="text-sm">ABHA ID: {patient.abhi_id}</p>
+                  <p className="text-sm">ABHA ID: {patient.abha_id}</p>
                 </div>
               )}
             </div>
             <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link to={`/practitioner/create-test?patient_id=${patient.id}&patient_name=${patient.name}`}>
+              <Link to={`/practitioner/create-test?patient_id=${patient[0].id}&patient_name=${patient[0].name}`}>
                 Create Diagnostic Test
                 <Stethoscope className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>
         </Card>
-      ) : (debouncedSearchQuery && !isLoading && !isError && !patient?.id && (
+      ) : (debouncedSearchQuery && !isLoading && !isError && (!patient || patient.length === 0 || !patient[0].id) && (
         <Alert variant="info">
           <AlertTitle>No Patient Found</AlertTitle>
           <AlertDescription>No patient matches the provided {searchBy === "phone" ? "phone number" : "ABHA ID"}.</AlertDescription>

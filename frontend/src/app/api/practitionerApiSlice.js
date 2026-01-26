@@ -3,9 +3,9 @@ import { apiSlice } from './index';
 export const practitionerApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     searchPatient: builder.query({
-      query: ({ phone, abhi_id }) => {
+      query: ({ phone, abha_id }) => {
         if (phone) return `practitioner/patient-search/?phone=${phone}`;
-        if (abhi_id) return `practitioner/patient-search/?abhi_id=${abhi_id}`;
+        if (abha_id) return `practitioner/patient-search/?abha_id=${abha_id}`;
         return 'practitioner/patient-search/';
       },
       keepUnusedDataFor: 0,

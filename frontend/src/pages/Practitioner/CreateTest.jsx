@@ -13,6 +13,8 @@ import { Button } from "../../components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 import { Loader2, FlaskConical } from "lucide-react";
 import { useCreateDiagnosticTestMutation } from "../../app/api/practitionerApiSlice";
+import { Input } from "../../components/ui/input";
+
 
 const CreateTest = () => {
   const location = useLocation();
