@@ -69,6 +69,10 @@ class PatientProfile(models.Model):
     blood_group = models.CharField(max_length=5, null=True, blank=True)
     known_allergies = models.TextField(null=True, blank=True)
     chronic_conditions = models.TextField(null=True, blank=True)
+    past_surgeries = models.JSONField(null=True, blank=True)
+    current_medications = models.JSONField(null=True, blank=True)
+    lifestyle_indicators = models.JSONField(null=True, blank=True)
+    medical_history = models.JSONField(null=True, blank=True)
 
     emergency_contact = models.CharField(max_length=15)
     address = models.TextField()
@@ -131,7 +135,7 @@ class PastMedicalHistory(models.Model):
     patient = models.ForeignKey(
         PatientProfile,
         on_delete=models.CASCADE,
-        related_name='medical_history'
+        related_name='past_medical_history'
     )
 
     condition_name = models.CharField(max_length=255)
@@ -244,9 +248,13 @@ class Referral(models.Model):
 
 
 class Appointment(models.Model):
+    """
+    Scheduled diagnostic visits: patient + practitioner at a center.
+    For online doctor consultations (request → schedule → meet link), use
+    ConsultationRequest instead.
+    """
     APPOINTMENT_TYPE_CHOICES = (
         ('DIAGNOSTIC', 'Diagnostic'),
-        ('CONSULTATION', 'Consultation'),
     )
 
     MODE_CHOICES = (
@@ -287,3 +295,32 @@ class DiagnosticReport(models.Model):
 
     def __str__(self):
         return f"Report for Test {self.test.id}"
+
+
+class ConsultationRequest(models.Model):
+    """
+    Online doctor consultations: patient requests → doctor schedules → meet link.
+    Does not overlap with Appointment, which is for diagnostic (patient–practitioner) visits.
+    """
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('SCHEDULED', 'Scheduled'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+        ('REJECTED', 'Rejected'),
+        ('NO_SHOW', 'No Show'),
+    )
+
+    patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='consultation_requests')
+    doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, related_name='consultation_requests')
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    requested_at = models.DateTimeField(auto_now_add=True)
+    scheduled_time = models.DateTimeField(null=True, blank=True)
+    meet_link = models.CharField(max_length=500, null=True, blank=True)
+    calendar_event_id = models.CharField(max_length=255, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Consultation {self.patient.user.full_name} – {self.doctor.user.full_name} ({self.status})"

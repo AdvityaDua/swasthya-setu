@@ -5,12 +5,13 @@ from django.http import FileResponse
 
 from patient.permissions import IsPatient
 from patient.serializers import (
-    PatientProfileSerializer, 
+    PatientProfileSerializer,
+    PatientProfileUpdateSerializer,
     PatientTestListSerializer,
     PatientTestDetailSerializer,
     PatientAppointmentSerializer,
     PatientAppointmentCreateSerializer,
-    PatientReferralSerializer
+    PatientReferralSerializer,
 )
 from core.models import (
     DiagnosticTest,
@@ -27,6 +28,14 @@ class PatientMeView(APIView):
         profile = request.user.patient_profile
         serializer = PatientProfileSerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        profile = request.user.patient_profile
+        serializer = PatientProfileUpdateSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        out = PatientProfileSerializer(profile)
+        return Response(out.data, status=status.HTTP_200_OK)
 
 
 class PatientTestListView(APIView):
@@ -111,3 +120,24 @@ class PatientReferralListView(APIView):
 
         serializer = PatientReferralSerializer(referrals, many=True)
         return Response(serializer.data)
+
+
+class PatientMedicalHistoryView(APIView):
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def get(self, request):
+        profile = request.user.patient_profile
+        data = profile.medical_history or {"conditions": [], "surgeries": []}
+        return Response(data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        profile = request.user.patient_profile
+        serializer = PatientProfileUpdateSerializer(
+            profile,
+            data={"medical_history": request.data},
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        data = profile.medical_history or {"conditions": [], "surgeries": []}
+        return Response(data, status=status.HTTP_200_OK)

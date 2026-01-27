@@ -109,8 +109,8 @@ class PatientAppointmentTest(PatientBaseTestCase):
 
         Appointment.objects.create(
             patient=self.patient_profile,
-            appointment_type="CONSULTATION",
-            mode="ONLINE",
+            appointment_type="DIAGNOSTIC",
+            mode="IN_PERSON",
             scheduled_time=timezone.now() + timedelta(days=1),
             status="BOOKED"
         )

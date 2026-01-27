@@ -4,7 +4,7 @@ import { HomePage, LoginPage, RegisterPage } from "./pages/Home";
 import RequireAuthAsPatient from "./components/RequireAuthAsPatient";
 import RequireAuthAsPractitioner from "./components/RequireAuthAsPractitioner";
 import RequireAuthAsDoctor from "./components/RequireAuthAsDoctor";
-import { Dashboard, MyTests, TestDetail, Referrals, Profile } from "./pages/Patient";
+import { Dashboard, MyTests, TestDetail, Referrals, Profile, ProfileEdit, MedicalHistory } from "./pages/Patient";
 import { Dashboard as PractitionerDashboard, PatientLookup, CreateTest, Profile as PractitionerProfile } from "./pages/Practitioner";
 import PatientDashboardLayout from "./components/layout/PatientDashboardLayout";
 import PractitionerDashboardLayout from "./components/layout/PractitionerDashboardLayout";
@@ -26,6 +26,8 @@ function App() {
             <Route path='tests/:test_id' element={<TestDetail />} />
             <Route path='referrals' element={<Referrals />} />
             <Route path='profile' element={<Profile />} />
+            <Route path='medical-history' element={<MedicalHistory />} />
+            <Route path='profile/edit' element={<ProfileEdit />} />
           </Route>
         </Route>  
         <Route element={<RequireAuthAsPractitioner />}>

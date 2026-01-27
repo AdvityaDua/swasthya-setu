@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('ACTIVE', 'Active'), ('RESOLVED', 'Resolved')], max_length=20)),
                 ('notes', models.TextField(blank=True, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('patient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='medical_history', to='core.patientprofile')),
+                ('patient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='past_medical_history', to='core.patientprofile')),
             ],
         ),
         migrations.AddField(

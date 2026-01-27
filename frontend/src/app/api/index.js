@@ -45,7 +45,7 @@ const baseQueryWithRefresh = async (args, api, extraOptions) => {
 export const apiSlice = createApi({
     reducerPath: 'api',
     baseQuery: baseQueryWithRefresh,
-    tagTypes: ["User", "Order", "Inventory", "Medicine", "Sale"],
+    tagTypes: ["User", "Order", "Inventory", "Medicine", "Sale", "PatientProfile"],
     endpoints: (builder) => ({
     })
 })

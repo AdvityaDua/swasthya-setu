@@ -1,11 +1,12 @@
 import DashboardLayout from "./DashboardLayout";
-import { LayoutDashboard, Stethoscope, FileText, UserIcon } from "lucide-react";
+import { LayoutDashboard, Stethoscope, FileText, UserIcon, ClipboardList } from "lucide-react";
 
 const PatientDashboardLayout = () => {
   const patientMenuItems = [
-    { label: "Dashboard", path: "/patient", icon: LayoutDashboard, color: "text-blue-600", end: true,},
+    { label: "Dashboard", path: "/patient", icon: LayoutDashboard, color: "text-blue-600", end: true },
     { label: "My Tests", path: "/patient/tests", icon: Stethoscope, color: "text-emerald-600" },
     { label: "Referrals", path: "/patient/referrals", icon: FileText, color: "text-orange-600" },
+    { label: "Medical History", path: "/patient/medical-history", icon: ClipboardList, color: "text-purple-600" },
     { label: "Profile", path: "/patient/profile", icon: UserIcon, color: "text-pink-600" },
   ];
 

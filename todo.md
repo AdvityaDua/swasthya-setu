@@ -8,6 +8,7 @@
 ## Phase 1: Core Foundations
 
 ### 1.1 User Registration & Profile Setup
+
 - [x] Add PatientProfile fields (date_of_birth, blood_group, known_allergies, chronic_conditions) to registration flow
 - [x] Create PractitionerProfile during registration when role=PRACTITIONER
 - [x] Create DoctorProfile during registration when role=DOCTOR
@@ -17,20 +18,22 @@
 - [x] Add preferred language dropdown to registration form
 
 ### 1.2 Authentication Enhancements
+
 - [x] Fix login redirect logic to properly route DOCTOR role to /doctor dashboard
 - [x] Persist user state to call refresh token API for session recovery on page refresh
 - [x] Add loading state handling during authentication check on protected routes
 
 ### 1.3 Backend Model Completions
+
 - [x] Add `preferred_language` field to User model (choices: en, hi, ta, te, bn, mr, gu, kn, ml, pa, or)
-- [ ] Add `past_surgeries` field to PatientProfile model (per PRD 5.1.1)
-- [ ] Add `current_medications` field to PatientProfile model (per PRD 5.1.1)
-- [ ] Add `lifestyle_indicators` field to PatientProfile model (per PRD 5.1.1)
+- [x] Add `past_surgeries` field to PatientProfile model (per PRD 5.1.1)
+- [x] Add `current_medications` field to PatientProfile model (per PRD 5.1.1)
+- [x] Add `lifestyle_indicators` field to PatientProfile model (per PRD 5.1.1)
 - [x] Add `availability_timings` JSONField to DoctorProfile model (per PRD 5.1.3)
 - [x] Add `latitude` and `longitude` DecimalFields to PractitionerProfile model
-- [ ] Add `services_offered` JSONField to PractitionerProfile model (list of test types)
-- [ ] Create ConsultationRequest model with: patient, doctor, status, requested_at, scheduled_time, meet_link, calendar_event_id
-- [ ] Add migration for new model fields
+- [x] Add `services_offered` JSONField to PractitionerProfile model (list of test types)
+- [x] Create ConsultationRequest model with: patient, doctor, status, requested_at, scheduled_time, meet_link, calendar_event_id
+- [x] Add migration for new model fields
 
 ---
 
@@ -39,35 +42,42 @@
 ### 2.1 Patient Features
 
 #### Patient Profile Management
-- [ ] Create patient profile edit page UI at `/patient/profile/edit`
-- [ ] Add form fields for: date_of_birth, blood_group, emergency_contact, address
-- [ ] Add health history section: known_allergies, chronic_conditions, current_medications
-- [ ] Create PATCH `/patient/me/` endpoint for profile updates
-- [ ] Add validation for health-related fields in PatientProfile serializer
+
+- [x] Create patient profile edit page UI at `/patient/profile/edit`
+- [x] Add form fields for: date_of_birth, blood_group, emergency_contact, address
+- [x] Add health history section: known_allergies, chronic_conditions, current_medications, past_surgeries, lifestyle_indicators
+- [x] Create PATCH `/patient/me/` endpoint for profile updates
+- [x] Add validation for health-related fields in PatientProfile serializer (incl. JSON schemas for past_surgeries, current_medications, lifestyle_indicators)
+- [x] Extend GET `/patient/me/` to return all profile fields; render in Profile page with Edit button
 
 #### Patient Health History
-- [ ] Create PastMedicalHistory list view endpoint GET `/patient/medical-history/`
-- [ ] Create PastMedicalHistory create endpoint POST `/patient/medical-history/`
-- [ ] Build Medical History management UI component in patient profile
-- [ ] Add ability to mark conditions as ACTIVE or RESOLVED
+
+- [x] Create medical history JSONField on PatientProfile (conditions + surgeries)
+- [x] Create medical history endpoint GET `/patient/medical-history/` returning structured JSON
+- [x] Create medical history update endpoint PATCH `/patient/medical-history/`
+- [x] Build Medical History management UI page at `/patient/medical-history` with sidebar menu item
+- [x] Add ability to mark conditions as ACTIVE or RESOLVED
 
 #### Patient Test Detail Enhancements
-- [ ] Display referral information in TestDetail.jsx when referral exists
-- [ ] Display doctor review decision and notes when available
-- [ ] Add "Download Report" button when DiagnosticReport exists
-- [ ] Connect download button to GET `/patient/reports/:test_id/` endpoint
-- [ ] Display AI heatmap image in test detail view
-- [ ] Add disclaimer text below AI results per design doc
+
+- [x] Display referral information in TestDetail.jsx when referral exists
+- [x] Display doctor review decision and notes when available
+- [x] Add "Download Report" button when DiagnosticReport exists
+- [x] Connect download button to GET `/patient/reports/:test_id/` endpoint
+- [x] Display AI heatmap image in test detail view
+- [x] Add disclaimer text below AI results per design doc
 
 #### Patient Appointments UI
+
 - [ ] Create Appointments page at `/patient/appointments`
 - [ ] Add Appointments link to PatientDashboardLayout menu
 - [ ] Build appointment list table with status badges
 - [ ] Create appointment booking form with date/time picker
-- [ ] Add doctor selection dropdown for consultation appointments
+- [ ] Add practitioner/center selection for diagnostic appointments (doctor consultations use ConsultationRequest; see Doctor Discovery and Consultation Features)
 - [ ] Connect to existing `/patient/appointments/` and `/patient/appointments/book/` endpoints
 
 #### Doctor Discovery (PRD 5.1.3)
+
 - [ ] Create backend endpoint GET `/patient/doctors/` to list doctors with filters
 - [ ] Add DoctorListSerializer with specialization, hospital, availability fields
 - [ ] Create Doctor Discovery page UI at `/patient/doctors`
@@ -76,6 +86,7 @@
 - [ ] Add "Request Consultation" button per doctor
 
 #### Practitioner Discovery with Map (PRD 5.1.3)
+
 - [ ] Create backend endpoint GET `/patient/practitioners/` to list practitioners with location data
 - [ ] Add PractitionerListSerializer with center_name, location, coordinates, services fields
 - [ ] Create Practitioner Discovery page UI at `/patient/practitioners`
@@ -90,7 +101,8 @@
 - [ ] Add "Get Directions" button linking to Google Maps/OpenStreetMap directions
 
 #### Consultation Features (PRD 5.1.4) - Google Calendar + Meet Integration
-- [ ] Create ConsultationRequest model in backend with fields: patient, doctor, status, scheduled_time, meet_link
+
+- [x] Create ConsultationRequest model in backend with fields: patient, doctor, status, scheduled_time, meet_link (done in 1.3; includes requested_at, calendar_event_id)
 - [ ] Set up Google Cloud project and enable Google Calendar API
 - [ ] Install google-api-python-client and google-auth packages in backend
 - [ ] Create backend service `backend/core/services/google_calendar.py` for Calendar API integration
@@ -109,6 +121,7 @@
 ### 2.2 Practitioner Features
 
 #### Test Workflow Page
+
 - [ ] Create TestWorkflow.jsx page at `/practitioner/tests/:test_id/workflow`
 - [ ] Add route for TestWorkflow in App.jsx
 - [ ] Build Step 1: Image Upload form with file input for DICOM/PNG/JPG
@@ -124,6 +137,7 @@
 - [ ] Add workflow progress indicator showing current step
 
 #### Active Tests Management
+
 - [ ] Create ActiveTests.jsx page at `/practitioner/active-tests`
 - [ ] Add route for ActiveTests in App.jsx
 - [ ] Create backend endpoint GET `/practitioner/tests/active/` returning practitioner's tests
@@ -132,6 +146,7 @@
 - [ ] Add status filter (UPLOADED, AI_DONE, REFERRED, CLOSED)
 
 #### Practitioner Profile & Location
+
 - [x] Add `latitude` and `longitude` fields to PractitionerProfile model
 - [x] Add migration for location coordinate fields
 - [x] Create PractitionerProfile.jsx page at `/practitioner/profile`
@@ -145,6 +160,7 @@
 - [x] Create PATCH `/practitioner/me/` endpoint for profile updates including location
 
 #### Doctor Selection for Referral
+
 - [ ] Create backend endpoint GET `/practitioner/doctors/` to list doctors
 - [ ] Filter doctors by specialization relevant to test type
 - [ ] Populate doctor dropdown in referral form with API data
@@ -152,24 +168,28 @@
 ### 2.3 Doctor Features
 
 #### Doctor Dashboard Layout
+
 - [ ] Create DoctorDashboardLayout.jsx in components/layout/
 - [ ] Add menu items: Dashboard, Pending Referrals, Reviewed Cases, Profile
 - [ ] Add RequireAuthAsDoctor.jsx route guard component
 - [ ] Add doctor routes to App.jsx under RequireAuthAsDoctor
 
 #### Doctor Dashboard Page
+
 - [ ] Create Doctor/Dashboard.jsx page
 - [ ] Display summary: pending referrals count, reviewed today count
 - [ ] Add quick links to pending referrals
 - [ ] Include ethical AI disclaimer per design doc
 
 #### Pending Referrals Page
+
 - [ ] Create Doctor/PendingReferrals.jsx page
 - [ ] Fetch data from GET `/doctor/referrals/` endpoint
 - [ ] Display table: patient name, test type, urgency, date
 - [ ] Add "Review Case" button linking to case detail
 
 #### Case Detail & Review Page
+
 - [ ] Create Doctor/CaseDetail.jsx page at `/doctor/cases/:test_id`
 - [ ] Fetch case data from GET `/doctor/cases/:test_id/` endpoint
 - [ ] Display patient information and test details
@@ -182,12 +202,14 @@
 - [ ] Add "Close Case" button connecting to POST `/doctor/referrals/:id/close/`
 
 #### Doctor Profile
+
 - [ ] Create Doctor/Profile.jsx page
 - [ ] Create backend endpoint GET `/doctor/me/` for doctor profile
 - [ ] Display: specialization, hospital_name, registration_number, experience
 - [ ] Add teleconsult availability toggle
 
 #### Doctor Consultation Management (Google Calendar + Meet)
+
 - [ ] Create Doctor/Consultations.jsx page at `/doctor/consultations`
 - [ ] Add Consultations link to DoctorDashboardLayout menu
 - [ ] Display pending consultation requests from patients
@@ -199,6 +221,7 @@
 - [ ] Show consultation history with completed/cancelled status
 
 #### Reviewed Cases History
+
 - [ ] Create Doctor/ReviewedCases.jsx page
 - [ ] Create backend endpoint GET `/doctor/reviewed/` for reviewed referrals
 - [ ] Display historical cases with review decisions
@@ -206,6 +229,7 @@
 ### 2.4 AI & Intelligence Layer
 
 #### TB Model Integration
+
 - [ ] Implement TB model inference in backend/ai/tb/ directory
 - [ ] Create TBModel class similar to BreastCancerModel
 - [ ] Create TB inference function with GradCAM support
@@ -213,24 +237,28 @@
 - [ ] Route test_type="TB" to appropriate AI model
 
 #### Clinical Context in AI Inference
+
 - [ ] Modify run_ai_and_generate_report to accept clinical context
 - [ ] Include patient health history in AI analysis context
 - [ ] Populate auto_history_snapshot from PatientProfile in ClinicalContext creation
 - [ ] Include context summary in generated PDF report
 
 #### Diabetic Model Integration
+
 - [ ] Wire existing diabetic.pkl model to inference pipeline
 - [ ] Add DIABETIC to TEST_TYPE_CHOICES in DiagnosticTest model
 - [ ] Create diabetic inference function
 - [ ] Add diabetic test type option in CreateTest.jsx
 
 #### Report Enhancements
+
 - [ ] Add patient health history section to PDF report
 - [ ] Add clinical context (symptoms, vitals) to PDF report
 - [ ] Add doctor review section placeholder for post-review reports
 - [ ] Improve PDF styling and layout
 
 #### Multilingual Report Generation - Bhashini API Integration
+
 - [ ] Register for Bhashini API access at bhashini.gov.in
 - [ ] Create backend service `backend/ai/bhashini_service.py` for Bhashini API integration
 - [ ] Implement translation function for text content using Bhashini NMT (Neural Machine Translation)
@@ -250,8 +278,9 @@
 ## Phase 3: Integration & Validation
 
 ### 3.1 API Slice Completions
-- [ ] Add `getPatientMedicalHistory` query to patientApiSlice
-- [ ] Add `updatePatientProfile` mutation to patientApiSlice
+
+- [x] Add `getPatientMedicalHistory` query to patientApiSlice
+- [x] Add `updatePatientProfile` mutation to patientApiSlice
 - [ ] Add `getPatientDoctors` query to patientApiSlice
 - [ ] Add `getPatientPractitioners` query to patientApiSlice (with location data)
 - [ ] Add `requestConsultation` mutation to patientApiSlice
@@ -268,6 +297,7 @@
 - [ ] Add `getDoctorConsultations` query to doctorApiSlice
 
 ### 3.2 Form Validations
+
 - [ ] Add phone number format validation (10 digits) in registration
 - [ ] Add ABHA ID format validation (xxxx-xxxx-xxxx-xxxx pattern)
 - [ ] Add password strength validation in registration
@@ -276,6 +306,7 @@
 - [ ] Add required field validation for clinical context form
 
 ### 3.3 Error Handling
+
 - [ ] Add global error boundary component in React
 - [ ] Implement consistent error message display across all forms
 - [ ] Add network error retry logic for API calls
@@ -283,6 +314,7 @@
 - [ ] Add empty state handling for all list views
 
 ### 3.4 Backend Validations
+
 - [ ] Add test ownership validation in practitioner views
 - [ ] Add referral status validation before review submission
 - [ ] Add file extension validation in DiagnosticImageUploadSerializer
@@ -293,18 +325,21 @@
 ## Phase 4: UX, Safety & Polish
 
 ### 4.1 AI Transparency (Design Doc Section 9)
+
 - [ ] Add "AI is assistive" disclaimer badge on all AI result displays
 - [ ] Add "Doctor review required" notice before showing AI results to patients
 - [ ] Add confidence interpretation helper text (e.g., "High confidence" explanation)
 - [ ] Ensure AI results are never shown without doctor oversight disclaimer
 
 ### 4.2 Patient Data Privacy
+
 - [ ] Implement audit logging for all data access
 - [ ] Add request logging middleware for sensitive endpoints
 - [ ] Ensure patients can only access their own data (verify all patient views)
 - [ ] Add data access audit trail model
 
 ### 4.3 UI/UX Improvements
+
 - [ ] Add loading skeletons for all data-fetching components
 - [ ] Implement optimistic updates for form submissions
 - [ ] Add success toast notifications for completed actions
@@ -313,6 +348,7 @@
 - [ ] Add breadcrumb navigation in dashboard pages
 
 ### 4.4 Accessibility (Design Doc Section 10)
+
 - [ ] Add aria-labels to all interactive elements
 - [ ] Ensure color contrast meets WCAG AA standards
 - [ ] Add keyboard navigation support for all forms
@@ -320,6 +356,7 @@
 - [ ] Test with screen reader compatibility
 
 ### 4.5 Empty States & Edge Cases
+
 - [ ] Design empty state for "No tests found" in patient tests
 - [ ] Design empty state for "No referrals" in patient referrals
 - [ ] Design empty state for "No pending referrals" in doctor dashboard
@@ -331,6 +368,7 @@
 ## Phase 5: Documentation & Final Review
 
 ### 5.1 API Documentation
+
 - [ ] Document all patient API endpoints with request/response examples
 - [ ] Document all practitioner API endpoints
 - [ ] Document all doctor API endpoints
@@ -338,6 +376,7 @@
 - [ ] Add API error code reference
 
 ### 5.2 Deployment Preparation
+
 - [ ] Configure production environment variables
 - [ ] Set up CORS for production frontend domain
 - [ ] Configure secure cookie settings for production
@@ -345,6 +384,7 @@
 - [ ] Configure database connection for production
 
 ### 5.3 Testing
+
 - [ ] Write unit tests for AI inference functions
 - [ ] Write integration tests for authentication flow
 - [ ] Write tests for practitioner test creation workflow
@@ -352,6 +392,7 @@
 - [ ] Add frontend component tests for critical flows
 
 ### 5.4 Code Quality
+
 - [ ] Remove console.log statements from production code
 - [ ] Fix linting errors across frontend codebase
 - [ ] Add TypeScript types for API responses (optional enhancement)
@@ -368,12 +409,12 @@
 
 ## Implementation Decisions
 
-| Feature | Technology Choice | Notes |
-|---------|------------------|-------|
-| **Multilingual Reports** | Bhashini API | Government of India translation service for Indian languages |
-| **Video Consultations** | Google Calendar API + Google Meet | Schedule meetings and auto-generate Meet links |
-| **Map Integration** | Leaflet + OpenStreetMap | Free, open-source mapping solution |
-| **Insurance Integration** | Future Scope | No billing fields required for v1 |
+| Feature                   | Technology Choice                 | Notes                                                        |
+| ------------------------- | --------------------------------- | ------------------------------------------------------------ |
+| **Multilingual Reports**  | Bhashini API                      | Government of India translation service for Indian languages |
+| **Video Consultations**   | Google Calendar API + Google Meet | Schedule meetings and auto-generate Meet links               |
+| **Map Integration**       | Leaflet + OpenStreetMap           | Free, open-source mapping solution                           |
+| **Insurance Integration** | Future Scope                      | No billing fields required for v1                            |
 
 ## External API Setup Required
 

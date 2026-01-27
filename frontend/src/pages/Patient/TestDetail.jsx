@@ -13,6 +13,8 @@ import { Separator } from "../../components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 import { FrownIcon, InfoIcon, TrendingUpIcon, ShieldAlertIcon, Loader2 } from "lucide-react";
 
+const API_BASE_URL = "http://127.0.0.1:8000";
+
 const TestDetail = () => {
   const { test_id } = useParams();
   const { data: testDetail, isLoading, isSuccess, isError, error } = useGetPatientTestDetailQuery(test_id);
@@ -56,6 +58,13 @@ const TestDetail = () => {
     }
   };
 
+  const referral = testDetail.referral;
+  const doctorReview = referral?.doctor_review;
+  const report = testDetail.report;
+
+  const reportDownloadUrl =
+    report && report.available ? `${API_BASE_URL}${report.download_path}` : null;
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Card className="md:col-span-2 lg:col-span-1">
@@ -82,10 +91,26 @@ const TestDetail = () => {
               {testDetail.status}
             </Badge>
           </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Risk Level</p>
-            {getRiskLevelBadge(testDetail.risk_level)}
-          </div>
+          {testDetail.ai_result && (
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Risk Level (AI)</p>
+              {getRiskLevelBadge(testDetail.ai_result.risk_level)}
+            </div>
+          )}
+
+          {reportDownloadUrl && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Report</p>
+              <a
+                href={reportDownloadUrl}
+                className="inline-flex items-center text-sm font-medium text-primary underline underline-offset-4"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Download PDF report
+              </a>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -106,9 +131,38 @@ const TestDetail = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Confidence</p>
-              <p className="text-lg font-semibold">{(testDetail.ai_result.confidence * 100).toFixed(2)}%</p>
+              <p className="text-lg font-semibold">
+                {(testDetail.ai_result.confidence * 100).toFixed(2)}%
+              </p>
             </div>
-            {/* Add more AI result details as needed */}
+
+            {testDetail.ai_result.heatmap_url && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">AI Heatmap</p>
+                <img
+                  src={testDetail.ai_result.heatmap_url}
+                  alt="AI heatmap"
+                  className="w-full rounded-md border"
+                />
+              </div>
+            )}
+
+            <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+              <p className="flex items-center gap-1">
+                <InfoIcon className="h-3 w-3" />
+                <span>
+                  AI output is assistive and not a final diagnosis. A qualified doctor must review
+                  and confirm any findings.
+                </span>
+              </p>
+              <p className="flex items-center gap-1">
+                <ShieldAlertIcon className="h-3 w-3" />
+                <span>
+                  Never change or stop medications based only on AI results. Always consult your
+                  doctor.
+                </span>
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -118,8 +172,21 @@ const TestDetail = () => {
           <CardTitle>Doctor Review</CardTitle>
           <CardDescription>Detailed review by a medical professional.</CardDescription>
         </CardHeader>
-        <CardContent className="text-muted-foreground">
-          <p>No doctor review available yet.</p>
+        <CardContent className="text-muted-foreground space-y-2">
+          {doctorReview ? (
+            <>
+              <p>
+                <span className="font-medium">Decision:</span> {doctorReview.decision}
+              </p>
+              {doctorReview.notes && (
+                <p>
+                  <span className="font-medium">Notes:</span> {doctorReview.notes}
+                </p>
+              )}
+            </>
+          ) : (
+            <p>No doctor review available yet.</p>
+          )}
         </CardContent>
       </Card>
 
@@ -128,8 +195,24 @@ const TestDetail = () => {
           <CardTitle>Referral Status</CardTitle>
           <CardDescription>Current status of any associated referrals.</CardDescription>
         </CardHeader>
-        <CardContent className="text-muted-foreground">
-          <p>No referral information available.</p>
+        <CardContent className="text-muted-foreground space-y-2">
+          {referral ? (
+            <>
+              <p>
+                <span className="font-medium">Urgency:</span> {referral.urgency}
+              </p>
+              <p>
+                <span className="font-medium">Status:</span> {referral.status}
+              </p>
+              {referral.doctor_name && (
+                <p>
+                  <span className="font-medium">Referred to:</span> {referral.doctor_name}
+                </p>
+              )}
+            </>
+          ) : (
+            <p>No referral information available.</p>
+          )}
         </CardContent>
       </Card>
     </div>

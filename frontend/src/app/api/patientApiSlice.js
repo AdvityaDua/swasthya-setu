@@ -19,11 +19,30 @@ export const patientApiSlice = apiSlice.injectEndpoints({
     }),
     getPatientProfile: builder.query({
       query: () => "patient/me/",
-      pollingInterval: 15000,
+      providesTags: ["PatientProfile"],
       keepUnusedDataFor: 0,
+    }),
+    getPatientMedicalHistory: builder.query({
+      query: () => "patient/medical-history/",
+      keepUnusedDataFor: 0,
+    }),
+    updatePatientMedicalHistory: builder.mutation({
+      query: (body) => ({ url: "patient/medical-history/", method: "PATCH", body }),
+    }),
+    updatePatientProfile: builder.mutation({
+      query: (body) => ({ url: "patient/me/", method: "PATCH", body }),
+      invalidatesTags: ["PatientProfile"],
     }),
   }),
 });
 
-export const { useGetPatientTestsQuery, useGetPatientTestDetailQuery, useGetPatientReferralsQuery, useGetPatientProfileQuery } = patientApiSlice;
+export const {
+  useGetPatientTestsQuery,
+  useGetPatientTestDetailQuery,
+  useGetPatientReferralsQuery,
+  useGetPatientProfileQuery,
+  useUpdatePatientProfileMutation,
+  useGetPatientMedicalHistoryQuery,
+  useUpdatePatientMedicalHistoryMutation,
+} = patientApiSlice;
 
