@@ -30,8 +30,8 @@ const DashboardLayout = ({ portalName, menuItems }) => {
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-slate-200 bg-white/80 backdrop-blur-xl sm:flex">
         <div className="flex h-20 items-center px-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/10">
-              <span className="text-white font-bold text-lg">S</span>
+            <div className="h-10 w-10 flex items-center justify-center">
+              <img src="/home/emblem.png" alt="Logo" className="h-10 w-10 object-contain" />
             </div>
             <h1 className="text-lg font-bold tracking-tight text-slate-900">Swasthya Setu</h1>
           </div>
