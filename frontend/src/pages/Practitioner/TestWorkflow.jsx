@@ -8,7 +8,9 @@ import {
   useGetAIResultQuery,
   useReferToDoctorMutation,
   useSearchPatientQuery,
+  useGetDoctorsListQuery,
 } from "../../app/api/practitionerApiSlice";
+import { API_ORIGIN } from "../../app/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -44,10 +46,34 @@ const TestWorkflow = () => {
   const [uploadImage, { isLoading: uploadingImage }] = useUploadTestImageMutation();
   const [addContext, { isLoading: addingContext }] = useAddClinicalContextMutation();
   const [runAI, { isLoading: runningAI }] = useRunAIInferenceMutation();
+  // determine whether we should fetch AI results: when current step >=3 OR test already has AI_DONE/REFERRED
+  const shouldFetchAI = (testDetail && (testDetail.status === "AI_DONE" || testDetail.status === "REFERRED")) || currentStep >= 3;
   const { data: aiResult, isLoading: aiResultLoading, refetch: refetchAIResult } = useGetAIResultQuery(test_id, {
-    skip: currentStep < 3,
+    skip: !shouldFetchAI,
   });
   const [referToDoctor, { isLoading: referringDoctor }] = useReferToDoctorMutation();
+  
+  // Fetch doctors list, filtering by test type if available
+  const { data: doctorsList, isLoading: doctorsLoading } = useGetDoctorsListQuery(
+    testDetail ? { test_type: testDetail.test_type } : { test_type: null }
+  );
+
+  // set initial/current step based on existing test data
+  useEffect(() => {
+    if (!testDetail) return;
+    if (testDetail.status === "AI_DONE" || testDetail.status === "REFERRED") {
+      setCurrentStep(4);
+      // ensure ai result is loaded
+      setTimeout(() => refetchAIResult(), 200);
+    } else if (testDetail.status === "UPLOADED") {
+      // if image already present, advance to clinical context step
+      if (testDetail.image) {
+        setCurrentStep(2);
+      } else {
+        setCurrentStep(1);
+      }
+    }
+  }, [testDetail, refetchAIResult]);
 
   // Handlers for each step
   const handleImageUpload = async () => {
@@ -373,7 +399,7 @@ const TestWorkflow = () => {
                   </div>
                   <div className="p-4 border rounded-lg">
                     <p className="text-sm font-semibold text-muted-foreground">Confidence</p>
-                    <p className="text-2xl font-bold mt-2">{aiResult.confidence?.toFixed(2) || "N/A"}%</p>
+                    <p className="text-2xl font-bold mt-2">{aiResult.confidence != null ? (aiResult.confidence * 100).toFixed(2) : "N/A"}%</p>
                   </div>
                 </div>
 
@@ -390,6 +416,31 @@ const TestWorkflow = () => {
                     <p className="text-sm text-blue-800">{aiResult.summary}</p>
                   </div>
                 )}
+
+                {aiResult.report_pdf && (() => {
+                  const url = aiResult.report_pdf.startsWith("http") ? aiResult.report_pdf : `${API_ORIGIN}${aiResult.report_pdf}`;
+                  return (
+                    <div className="pt-2 flex gap-2">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md"
+                      >
+                        <FileText className="h-4 w-4" />
+                        View Report
+                      </a>
+                      <a
+                        href={url}
+                        download
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border text-indigo-700 rounded-md"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Download PDF
+                      </a>
+                    </div>
+                  );
+                })()}
 
                 <p className="text-xs text-muted-foreground italic">
                   ⚠️ AI results are assistive only and must be reviewed by a doctor before patient disclosure.
@@ -422,12 +473,20 @@ const TestWorkflow = () => {
               <Label htmlFor="doctor-select">Select Doctor</Label>
               <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
                 <SelectTrigger id="doctor-select">
-                  <SelectValue placeholder="Choose a doctor..." />
+                  <SelectValue placeholder={doctorsLoading ? "Loading doctors..." : "Choose a doctor..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="doctor-1">Dr. Rajesh Kumar - TB Specialist</SelectItem>
-                  <SelectItem value="doctor-2">Dr. Priya Sharma - Oncology</SelectItem>
-                  <SelectItem value="doctor-3">Dr. Amit Patel - General Medicine</SelectItem>
+                  {doctorsLoading ? (
+                    <SelectItem disabled value="">Loading...</SelectItem>
+                  ) : doctorsList && doctorsList.length > 0 ? (
+                    doctorsList.map((doctor) => (
+                      <SelectItem key={doctor.doctor_id} value={doctor.doctor_id}>
+                        Dr. {doctor.name} - {doctor.specialization}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem disabled value="">No doctors available</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>

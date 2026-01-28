@@ -1,8 +1,11 @@
 import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react'
 import { login as loginAction, logout, removeToken } from '../slices/userSlice'
 
+export const API_BASE_URL = 'http://127.0.0.1:8000/api/';
+export const API_ORIGIN = 'http://127.0.0.1:8000';
+
 const baseQuery = fetchBaseQuery({
-    baseUrl: 'http://127.0.0.1:8000/api/',
+    baseUrl: API_BASE_URL,
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
         const token = getState().user.token;

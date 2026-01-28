@@ -49,6 +49,10 @@ export const practitionerApiSlice = apiSlice.injectEndpoints({
       pollingInterval: 15000,
       keepUnusedDataFor: 0,
     }),
+    getPractitionerClosedTests: builder.query({
+      query: () => "practitioner/tests/closed/",
+      keepUnusedDataFor: 0,
+    }),
     getTestDetail: builder.query({
       query: (test_id) => `practitioner/tests/${test_id}/`,
       keepUnusedDataFor: 0,
@@ -68,6 +72,14 @@ export const practitionerApiSlice = apiSlice.injectEndpoints({
         body,
       }),
     }),
+    getDoctorsList: builder.query({
+      query: ({ test_type } = {}) => {
+        let url = "practitioner/doctors/";
+        if (test_type) url += `?test_type=${test_type}`;
+        return url;
+      },
+      keepUnusedDataFor: 0,
+    }),
   }),
 });
 
@@ -79,9 +91,11 @@ export const {
   useRunAIInferenceMutation,
   useReferToDoctorMutation,
   useGetPractitionerActiveTestsQuery,
+  useGetPractitionerClosedTestsQuery,
   useGetTestDetailQuery,
   useGetAIResultQuery,
   useGetPractitionerProfileQuery,
   useUpdatePractitionerProfileMutation,
+  useGetDoctorsListQuery,
 } = practitionerApiSlice;
 

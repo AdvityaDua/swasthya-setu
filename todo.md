@@ -177,9 +177,9 @@
 
 #### Doctor Selection for Referral
 
-- [ ] Create backend endpoint GET `/practitioner/doctors/` to list doctors
-- [ ] Filter doctors by specialization relevant to test type
-- [ ] Populate doctor dropdown in referral form with API data
+- [x] Create backend endpoint GET `/practitioner/doctors/` to list doctors
+- [x] Filter doctors by specialization relevant to test type
+- [x] Populate doctor dropdown in referral form with API data
 
 ### 2.3 Doctor Features
 

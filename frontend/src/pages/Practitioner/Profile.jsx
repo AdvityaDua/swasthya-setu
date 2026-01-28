@@ -41,6 +41,10 @@ const Profile = () => {
     }
   }, [profile]);
 
+  const roundTo6Decimals = (value) => {
+    if (value == null) return null;
+    return Number(Number(value).toFixed(6));
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -60,7 +64,7 @@ const Profile = () => {
         diagnostic_center_name: diagnosticCenterName.trim(),
         center_location: centerLocation.trim(),
         experience_years: yrs,
-        ...(latitude != null && longitude != null && { latitude, longitude }),
+        ...(latitude != null && longitude != null && { latitude: roundTo6Decimals(latitude), longitude: roundTo6Decimals(longitude) }),
       }).unwrap();
       setSuccessMessage("Profile updated successfully.");
       refetch();

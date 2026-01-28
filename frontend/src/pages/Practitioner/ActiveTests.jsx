@@ -6,7 +6,8 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
-import { Loader2, AlertCircle, TrendingUp, Zap, CheckCircle2, Clock } from "lucide-react";
+import { Loader2, AlertCircle, TrendingUp, Zap, CheckCircle2, Clock, FileText } from "lucide-react";
+import { API_ORIGIN } from "../../app/api";
 
 const ActiveTests = () => {
   const navigate = useNavigate();
@@ -178,8 +179,26 @@ const ActiveTests = () => {
                   {test.ai_result && test.ai_result.risk_level && (
                     <div className="pt-4 border-t">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                          <Zap className="h-3 w-3" /> AI Result
+                        <span className="text-xs font-semibold text-muted-foreground flex gap-3 items-center">
+                          <div className="flex gap-1">
+                            <Zap className="h-3 w-3" /> AI Result
+                          </div>
+                          {test.ai_result.report_pdf && (() => {
+                            const url = test.ai_result.report_pdf.startsWith('http') ? test.ai_result.report_pdf : `${API_ORIGIN}${test.ai_result.report_pdf}`;
+                            return (
+                              <div className="flex gap-2">
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md text-sm"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  View Report
+                                </a>  
+                              </div>
+                            );
+                          })()}
                         </span>
                         <Badge
                           className={`${
@@ -196,6 +215,7 @@ const ActiveTests = () => {
                           <span className="text-sm font-medium">Score: {test.ai_result.risk_score.toFixed(2)}</span>
                         )}
                       </div>
+                      
                     </div>
                   )}
                 </div>
