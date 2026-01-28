@@ -4,14 +4,31 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
-import { Search, Loader2, UserCircleIcon, Stethoscope, Mail, Phone, CalendarDays } from "lucide-react";
-import { useSearchPatientQuery } from "../../app/api/practitionerApiSlice";
-import { Link } from "react-router-dom";
+import { Search, Loader2, UserCircleIcon, Stethoscope, Mail, Phone, CalendarDays, FlaskConical } from "lucide-react";
+import { useSearchPatientQuery, useCreateDiagnosticTestMutation } from "../../app/api/practitionerApiSlice";
+import { Link, useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 
 const PatientLookup = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchBy, setSearchBy] = useState("phone"); // 'phone' or 'abha_id'
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [testType, setTestType] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const navigate = useNavigate();
+
+  const { data: patient, isLoading, isSuccess, isError, error } = useSearchPatientQuery(
+    searchBy === "phone" ? { phone: debouncedSearchQuery } : { abha_id: debouncedSearchQuery },
+    {
+      skip: !debouncedSearchQuery,
+    }
+  );
+
+  const [createDiagnosticTest, { isLoading: isTestCreating, isError: isTestError, error: testError, isSuccess: isTestSuccess, data: createdTest }] = useCreateDiagnosticTestMutation();
+
 
   // Debounce the search query to avoid excessive API calls
   React.useEffect(() => {
@@ -21,16 +38,45 @@ const PatientLookup = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data: patient, isLoading, isSuccess, isError, error } = useSearchPatientQuery(
-        searchBy === "phone" ? { phone: debouncedSearchQuery } : { abha_id: debouncedSearchQuery },
-    {
-      skip: !debouncedSearchQuery,
+  React.useEffect(() => {
+    if (isSuccess && patient && patient.length > 0 && patient[0].id) {
+      setSelectedPatient(patient[0]);
+    } else {
+      setSelectedPatient(null);
     }
-  );
+  }, [isSuccess, patient]);
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setDebouncedSearchQuery(searchQuery);
+  };
+
+  const handleCreateTest = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!selectedPatient?.id) {
+      setErrorMessage("No patient selected. Please search and select a patient.");
+      return;
+    }
+    if (!testType) {
+      setErrorMessage("Please select a test type.");
+      return;
+    }
+
+    try {
+      const result = await createDiagnosticTest({ patient: selectedPatient.id, test_type: testType }).unwrap();
+      console.log("Create test succeeded:", result);
+      setSuccessMessage(`Diagnostic test for ${selectedPatient.name} (${testType}) created successfully!`);
+      setTimeout(() => {
+        navigate(`/practitioner/tests/${result.test_id}/workflow`);
+      }, 1500);
+    } catch (err) {
+      setErrorMessage(err.data?.detail || "Failed to create diagnostic test. Please try again.");
+      console.error("Create test failed:", err);
+    }
   };
 
   return (
@@ -104,19 +150,13 @@ const PatientLookup = () => {
                   <p className="text-sm">Email: {patient[0].email}</p>
                 </div>
               )}
-              {patient.abha_id && (
+              {patient[0].abha_id && (
                 <div className="flex items-center space-x-2 text-green-800">
                   <CalendarDays className="h-4 w-4" />
-                  <p className="text-sm">ABHA ID: {patient.abha_id}</p>
+                  <p className="text-sm">ABHA ID: {patient[0].abha_id}</p>
                 </div>
               )}
             </div>
-            <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link to={`/practitioner/create-test?patient_id=${patient[0].id}&patient_name=${patient[0].name}`}>
-                Create Diagnostic Test
-                <Stethoscope className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
           </CardContent>
         </Card>
       ) : (debouncedSearchQuery && !isLoading && !isError && (!patient || patient.length === 0 || !patient[0].id) && (
@@ -125,6 +165,56 @@ const PatientLookup = () => {
           <AlertDescription>No patient matches the provided {searchBy === "phone" ? "phone number" : "ABHA ID"}.</AlertDescription>
         </Alert>
       ))}
+
+      {selectedPatient && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Diagnostic Test</CardTitle>
+            <CardDescription>Select the type of diagnostic test for {selectedPatient.name}.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            {errorMessage && (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+            {successMessage && (
+              <Alert className="bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-200">
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>{successMessage}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid gap-2">
+              <Label>Patient Name</Label>
+              <Input type="text" value={selectedPatient.name || "N/A"} readOnly className="bg-muted" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="testType">Test Type</Label>
+              <Select value={testType} onValueChange={setTestType} disabled={isTestCreating}>
+                <SelectTrigger id="testType">
+                  <SelectValue placeholder="Select Test Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TB">Tuberculosis (TB) Scan</SelectItem>
+                  <SelectItem value="BREAST_CANCER">Breast Cancer Scan</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleCreateTest} disabled={isTestCreating || !selectedPatient?.id || !testType}>
+              {isTestCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Test...
+                </>
+              ) : (
+                "Create Test"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

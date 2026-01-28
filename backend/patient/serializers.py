@@ -481,10 +481,11 @@ class ConsultationRequestCreateSerializer(serializers.ModelSerializer):
 class ConsultationScheduleSerializer(serializers.ModelSerializer):
     """Serializer for doctor to schedule consultation with date/time"""
     scheduled_time = serializers.DateTimeField()
+    meet_link = serializers.URLField(required=False, allow_blank=True)
 
     class Meta:
         model = ConsultationRequest
-        fields = ['scheduled_time']
+        fields = ['scheduled_time', 'meet_link']
 
     def validate_scheduled_time(self, value):
         """Validate scheduled time is in the future"""

@@ -71,10 +71,6 @@ def create_consultation_event(doctor_email, patient_email, patient_name, schedul
                 'dateTime': end_time.isoformat(),
                 'timeZone': 'Asia/Kolkata',
             },
-            'attendees': [
-                {'email': doctor_email, 'responseStatus': 'accepted'},
-                {'email': patient_email, 'responseStatus': 'needsAction'},
-            ],
             'conferenceData': {
                 'createRequest': {
                     'requestId': f'consultation-{consultation_request_id}',
@@ -99,8 +95,10 @@ def create_consultation_event(doctor_email, patient_email, patient_name, schedul
             calendarId='primary',
             body=event,
             conferenceDataVersion=1,
-            sendNotifications=True
+            sendNotifications=False
         ).execute()
+
+        print(f"DEBUG: Created Event Response: {created_event}")
 
         # Extract Google Meet link
         meet_link = None

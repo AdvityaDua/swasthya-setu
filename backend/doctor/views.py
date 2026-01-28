@@ -9,6 +9,7 @@ from doctor.serializers import (
     DoctorCaseDetailSerializer,
     DoctorReviewSerializer,
     DoctorProfileSerializer,
+    DoctorReviewedCaseSerializer,
 )
 from core.models import Referral, DiagnosticTest, ConsultationRequest
 from doctor.models import DoctorReview
@@ -152,12 +153,16 @@ class DoctorConsultationScheduleView(APIView):
         serializer.is_valid(raise_exception=True)
         
         scheduled_time = serializer.validated_data['scheduled_time']
+        manual_link = serializer.validated_data.get('meet_link')
         
+        print(f"DEBUG: Manual Link received: {manual_link}")
+
         # Create Google Calendar event
         doctor_email = request.user.email
         patient_email = consultation.patient.user.email
         patient_name = consultation.patient.user.full_name
         
+        # Try to create calendar event regardless (for tracking), but use manual link if provided
         calendar_result = create_consultation_event(
             doctor_email=doctor_email,
             patient_email=patient_email,
@@ -166,15 +171,19 @@ class DoctorConsultationScheduleView(APIView):
             consultation_request_id=str(consultation.id)
         )
         
-        if not calendar_result.get('success'):
-            return Response(
-                {'detail': 'Failed to create calendar event', 'error': calendar_result.get('error')},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        print(f"DEBUG: Calendar Result: {calendar_result}")
+
+        # We don't fail strictly if calendar fails, as long as we have a link or plan to just schedule
+        # However, if calendar fails, we log it.
         
+        generated_link = calendar_result.get('meet_link')
+        final_link = manual_link if manual_link else generated_link
+        
+        print(f"DEBUG: Final Link to save: {final_link}")
+
         # Update consultation with meeting details
         consultation.scheduled_time = scheduled_time
-        consultation.meet_link = calendar_result.get('meet_link')
+        consultation.meet_link = final_link
         consultation.calendar_event_id = calendar_result.get('calendar_event_id')
         consultation.status = 'SCHEDULED'
         consultation.save()
@@ -265,3 +274,126 @@ class DoctorConsultationRescheduleView(APIView):
         
         response_serializer = ConsultationRequestSerializer(consultation)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+class DoctorConsultationCancelView(APIView):
+    permission_classes = [IsAuthenticated, IsDoctor]
+
+    def post(self, request, consultation_id):
+        """Cancel a scheduled consultation"""
+        consultation = get_object_or_404(
+            ConsultationRequest,
+            id=consultation_id,
+            doctor=request.user.doctor_profile,
+            status='SCHEDULED'
+        )
+        
+        print(f"DEBUG: Raw Request Data: {request.data}")
+        
+        reason = request.data.get('reason', 'No reason provided')
+        
+        # Cancel Google Calendar event if exists
+        if consultation.calendar_event_id:
+            from core.services.google_calendar import cancel_consultation_event
+            cancel_result = cancel_consultation_event(
+                calendar_event_id=consultation.calendar_event_id,
+                doctor_email=request.user.email
+            )
+            # Log error but don't block cancellation
+            if not cancel_result.get('success'):
+                print(f"Failed to cancel calendar event: {cancel_result.get('error')}")
+
+        consultation.status = 'CANCELLED'
+        consultation.save()
+        
+        response_data = ConsultationRequestSerializer(consultation).data
+        response_data['cancellation_reason'] = reason
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class DoctorDashboardStatsView(APIView):
+    permission_classes = [IsAuthenticated, IsDoctor]
+
+    def get(self, request):
+        doctor_profile = request.user.doctor_profile
+        today = timezone.now().date()
+        
+        pending_referrals_count = Referral.objects.filter(
+            referred_to=doctor_profile,
+            status="PENDING"
+        ).count()
+        
+        reviewed_today_count = DoctorReview.objects.filter(
+            doctor=doctor_profile,
+            reviewed_at__date=today
+        ).count()
+        
+        return Response({
+            "pending_referrals_count": pending_referrals_count,
+            "reviewed_today_count": reviewed_today_count
+        })
+class DoctorDirectScheduleView(APIView):
+    permission_classes = [IsAuthenticated, IsDoctor]
+
+    def post(self, request):
+        """
+        Directly schedule a consultation without a prior patient request.
+        """
+        patient_id = request.data.get("patient_id")
+        scheduled_time = request.data.get("scheduled_time")
+        
+        if not patient_id or not scheduled_time:
+            return Response(
+                {"detail": "patient_id and scheduled_time are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verify patient exists
+        from core.models import PatientProfile
+        patient = get_object_or_404(PatientProfile, id=patient_id)
+        doctor = request.user.doctor_profile
+
+        # Create consultation
+        consultation = ConsultationRequest.objects.create(
+            patient=patient,
+            doctor=doctor,
+            status="SCHEDULED",
+            scheduled_time=scheduled_time
+        )
+
+        # Create Google Calendar event
+        doctor_email = request.user.email
+        patient_email = patient.user.email
+        patient_name = patient.user.full_name
+        
+        calendar_result = create_consultation_event(
+            doctor_email=doctor_email,
+            patient_email=patient_email,
+            patient_name=patient_name,
+            scheduled_time=scheduled_time,
+            consultation_request_id=str(consultation.id)
+        )
+        
+        print(f"DEBUG: Direct Schedule Calendar Result: {calendar_result}")
+
+        # Update with link
+        consultation.meet_link = calendar_result.get('meet_link')
+        consultation.calendar_event_id = calendar_result.get('calendar_event_id')
+        consultation.save()
+
+        # Serialize using the same serializer as normal consultations
+        serializer = ConsultationRequestSerializer(consultation)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class DoctorReviewedCasesView(APIView):
+    permission_classes = [IsAuthenticated, IsDoctor]
+
+    def get(self, request):
+        reviews = DoctorReview.objects.filter(
+            doctor=request.user.doctor_profile
+        ).select_related("referral", "referral__test", "referral__test__patient", "referral__test__patient__user").order_by("-reviewed_at")
+        
+        serializer = DoctorReviewedCaseSerializer(reviews, many=True)
+        return Response(serializer.data)

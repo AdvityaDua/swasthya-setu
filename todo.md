@@ -192,37 +192,37 @@
 
 #### Doctor Dashboard Page
 
-- [ ] Create Doctor/Dashboard.jsx page
-- [ ] Display summary: pending referrals count, reviewed today count
-- [ ] Add quick links to pending referrals
-- [ ] Include ethical AI disclaimer per design doc
+- [x] Create Doctor/Dashboard.jsx page
+- [x] Display summary: pending referrals count, reviewed today count
+- [x] Add quick links to pending referrals
+- [x] Include ethical AI disclaimer per design doc
 
 #### Pending Referrals Page
 
-- [ ] Create Doctor/PendingReferrals.jsx page
-- [ ] Fetch data from GET `/doctor/referrals/` endpoint
-- [ ] Display table: patient name, test type, urgency, date
-- [ ] Add "Review Case" button linking to case detail
+- [x] Create Doctor/PendingReferrals.jsx page
+- [x] Fetch data from GET `/doctor/referrals/` endpoint
+- [x] Display table: patient name, test type, urgency, date
+- [x] Add "Review Case" button linking to case detail
 
 #### Case Detail & Review Page
 
-- [ ] Create Doctor/CaseDetail.jsx page at `/doctor/cases/:test_id`
-- [ ] Fetch case data from GET `/doctor/cases/:test_id/` endpoint
-- [ ] Display patient information and test details
-- [ ] Display AI inference results: risk_level, risk_score, confidence
-- [ ] Display heatmap image for explainability
-- [ ] Display patient health history context
-- [ ] Create review submission form with decision dropdown (CONFIRM, OVERRIDE, MORE_TESTS)
-- [ ] Add notes textarea for doctor comments
-- [ ] Connect form to POST `/doctor/referrals/:id/review/` endpoint
-- [ ] Add "Close Case" button connecting to POST `/doctor/referrals/:id/close/`
+- [x] Create Doctor/CaseDetail.jsx page at `/doctor/cases/:test_id`
+- [x] Fetch case data from GET `/doctor/cases/:test_id/` endpoint
+- [x] Display patient information and test details
+- [x] Display AI inference results: risk_level, risk_score, confidence
+- [x] Display heatmap image for explainability
+- [x] Display patient health history context
+- [x] Create review submission form with decision dropdown (CONFIRM, OVERRIDE, MORE_TESTS)
+- [x] Add notes textarea for doctor comments
+- [x] Connect form to POST `/doctor/referrals/:id/review/` endpoint
+- [x] Add "Close Case" button connecting to POST `/doctor/referrals/:id/close/`
 
 #### Doctor Profile
 
-- [ ] Create Doctor/Profile.jsx page
-- [ ] Create backend endpoint GET `/doctor/me/` for doctor profile
-- [ ] Display: specialization, hospital_name, registration_number, experience
-- [ ] Add teleconsult availability toggle
+- [x] Create Doctor/Profile.jsx page
+- [x] Create backend endpoint GET `/doctor/me/` for doctor profile
+- [x] Display: specialization, hospital_name, registration_number, experience
+- [x] Add teleconsult availability toggle
 
 #### Doctor Consultation Management (Google Calendar + Meet)
 
@@ -238,9 +238,9 @@
 
 #### Reviewed Cases History
 
-- [ ] Create Doctor/ReviewedCases.jsx page
-- [ ] Create backend endpoint GET `/doctor/reviewed/` for reviewed referrals
-- [ ] Display historical cases with review decisions
+- [x] Create Doctor/ReviewedCases.jsx page
+- [x] Create backend endpoint GET `/doctor/reviewed/` for reviewed referrals
+- [x] Display historical cases with review decisions
 
 ### 2.4 AI & Intelligence Layer
 
@@ -301,13 +301,13 @@
 - [x] Add `getPatientPractitioners` query to patientApiSlice (with location data)
 - [x] Add `requestConsultation` mutation to patientApiSlice
 - [x] Add `getPatientConsultations` query to patientApiSlice
-- [ ] Add `getDoctorList` query to practitionerApiSlice
-- [ ] Add `updatePractitionerProfile` mutation to practitionerApiSlice (with location)
+- [x] Add `getDoctorList` query to practitionerApiSlice
+- [x] Add `updatePractitionerProfile` mutation to practitionerApiSlice (with location)
 - [x] Create doctorApiSlice.js with all doctor endpoints
-- [ ] Add `getDoctorReferrals` query to doctorApiSlice
-- [ ] Add `getDoctorCaseDetail` query to doctorApiSlice
-- [ ] Add `submitDoctorReview` mutation to doctorApiSlice
-- [ ] Add `closeDoctorReferral` mutation to doctorApiSlice
+- [x] Add `getDoctorReferrals` query to doctorApiSlice
+- [x] Add `getDoctorCaseDetail` query to doctorApiSlice
+- [x] Add `submitDoctorReview` mutation to doctorApiSlice
+- [x] Add `closeDoctorReferral` mutation to doctorApiSlice
 - [x] Add `getDoctorConsultationRequests` query to doctorApiSlice
 - [x] Add `scheduleConsultation` mutation to doctorApiSlice
 - [x] Add `getDoctorConsultations` query to doctorApiSlice
@@ -431,6 +431,10 @@
 | **Video Consultations**   | Google Calendar API + Google Meet | Schedule meetings and auto-generate Meet links               |
 | **Map Integration**       | Leaflet + OpenStreetMap           | Free, open-source mapping solution                           |
 | **Insurance Integration** | Future Scope                      | No billing fields required for v1                            |
+
+### 5.5 Optional / Low Priority Features
+
+- [ ] Implement System Email Notification for consultation invites (fallback for Service Account limitation)
 
 ## External API Setup Required
 
