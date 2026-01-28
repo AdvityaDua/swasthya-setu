@@ -49,6 +49,14 @@ export const practitionerApiSlice = apiSlice.injectEndpoints({
       pollingInterval: 15000,
       keepUnusedDataFor: 0,
     }),
+    getTestDetail: builder.query({
+      query: (test_id) => `practitioner/tests/${test_id}/`,
+      keepUnusedDataFor: 0,
+    }),
+    getAIResult: builder.query({
+      query: (test_id) => `practitioner/tests/${test_id}/ai-result/`,
+      keepUnusedDataFor: 0,
+    }),
     getPractitionerProfile: builder.query({
       query: () => "practitioner/me/",
       keepUnusedDataFor: 0,
@@ -71,6 +79,8 @@ export const {
   useRunAIInferenceMutation,
   useReferToDoctorMutation,
   useGetPractitionerActiveTestsQuery,
+  useGetTestDetailQuery,
+  useGetAIResultQuery,
   useGetPractitionerProfileQuery,
   useUpdatePractitionerProfileMutation,
 } = practitionerApiSlice;

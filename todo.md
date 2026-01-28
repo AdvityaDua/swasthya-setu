@@ -69,81 +69,96 @@
 
 #### Patient Appointments UI
 
-- [ ] Create Appointments page at `/patient/appointments`
-- [ ] Add Appointments link to PatientDashboardLayout menu
-- [ ] Build appointment list table with status badges
-- [ ] Create appointment booking form with date/time picker
-- [ ] Add practitioner/center selection for diagnostic appointments (doctor consultations use ConsultationRequest; see Doctor Discovery and Consultation Features)
-- [ ] Connect to existing `/patient/appointments/` and `/patient/appointments/book/` endpoints
+- [x] Create Appointments page at `/patient/appointments`
+- [x] Add Appointments link to PatientDashboardLayout menu
+- [x] Build appointment list table with status badges
+- [x] Create appointment booking form with date/time picker
+- [x] Add practitioner/center selection for diagnostic appointments (doctor consultations use ConsultationRequest; see Doctor Discovery and Consultation Features)
+- [x] Connect to existing `/patient/appointments/` and `/patient/appointments/book/` endpoints
+- [x] Add location map view to show diagnostic center coordinates with Google Maps embed
+- [x] Add view location button in appointments table for each booked appointment
+- [x] Remove ONLINE mode since all diagnostic appointments are in-person
 
 #### Doctor Discovery (PRD 5.1.3)
 
-- [ ] Create backend endpoint GET `/patient/doctors/` to list doctors with filters
-- [ ] Add DoctorListSerializer with specialization, hospital, availability fields
-- [ ] Create Doctor Discovery page UI at `/patient/doctors`
-- [ ] Add search/filter by specialization
-- [ ] Display doctor availability timings
-- [ ] Add "Request Consultation" button per doctor
+- [x] Create backend endpoint GET `/patient/doctors/` to list doctors with filters
+- [x] Add DoctorListSerializer with specialization, hospital, availability fields
+- [x] Create Doctor Discovery page UI at `/patient/doctors`
+- [x] Add search/filter by specialization
+- [x] Display doctor availability timings
+- [x] Add "Request Consultation" button per doctor
+- [x] Create POST `/patient/consultations/request/` endpoint to send consultation requests
+- [x] Add Doctors link to PatientDashboardLayout menu
+- [x] Add routing for `/patient/doctors` page
 
 #### Practitioner Discovery with Map (PRD 5.1.3)
 
-- [ ] Create backend endpoint GET `/patient/practitioners/` to list practitioners with location data
-- [ ] Add PractitionerListSerializer with center_name, location, coordinates, services fields
-- [ ] Create Practitioner Discovery page UI at `/patient/practitioners`
-- [ ] Add Practitioners link to PatientDashboardLayout menu
-- [ ] Install react-leaflet and leaflet packages (if not already installed)
-- [ ] Create map view component showing practitioner locations as markers
-- [ ] Display practitioner info popup on marker click (name, center, services)
-- [ ] Add list view toggle alongside map view
-- [ ] Add search by location/area functionality
-- [ ] Add filter by test types offered (TB, Breast Cancer, Diabetic)
-- [ ] Show distance from patient location (if geolocation permission granted)
-- [ ] Add "Get Directions" button linking to Google Maps/OpenStreetMap directions
+- [x] Create backend endpoint GET `/patient/practitioners/` to list practitioners with location data
+- [x] Add PractitionerListSerializer with center_name, location, coordinates, services fields
+- [x] Create Practitioner Discovery page UI at `/patient/practitioners`
+- [x] Add Practitioners link to PatientDashboardLayout menu
+- [x] Install react-leaflet and leaflet packages (if not already installed) - Using react-map-gl + mapbox instead
+- [x] Create map view component showing practitioner locations as markers
+- [x] Display practitioner info popup on marker click (name, center, services)
+- [x] Add list view toggle alongside map view
+- [x] Add search by location/area functionality
+- [x] Add filter by test types offered (TB, Breast Cancer, Diabetic)
+- [x] Show distance from patient location (if geolocation permission granted)
+- [x] Add "Get Directions" button linking to Google Maps directions
+- [x] Add routing for `/patient/practitioners` page
 
 #### Consultation Features (PRD 5.1.4) - Google Calendar + Meet Integration
 
 - [x] Create ConsultationRequest model in backend with fields: patient, doctor, status, scheduled_time, meet_link (done in 1.3; includes requested_at, calendar_event_id)
-- [ ] Set up Google Cloud project and enable Google Calendar API
-- [ ] Install google-api-python-client and google-auth packages in backend
-- [ ] Create backend service `backend/core/services/google_calendar.py` for Calendar API integration
-- [ ] Implement function to create Google Calendar event with Google Meet link
-- [ ] Implement function to add patient and doctor as event participants
-- [ ] Create endpoint POST `/patient/consultations/request/` to request consultation
-- [ ] Create endpoint POST `/doctor/consultations/:id/schedule/` for doctor to confirm and schedule
-- [ ] Store Google Meet link in ConsultationRequest model after scheduling
-- [ ] Create endpoint GET `/patient/consultations/` to list patient's consultations with meet links
-- [ ] Create endpoint GET `/doctor/consultations/` to list doctor's consultations
-- [ ] Add consultation request UI on doctor discovery page
-- [ ] Add "Join Meeting" button in patient consultation list (opens Google Meet link)
-- [ ] Add consultation management UI in doctor dashboard
-- [ ] Add consultation status tracking in patient dashboard
+- [x] Set up Google Cloud project and enable Google Calendar API
+- [x] Install google-api-python-client and google-auth packages in backend
+- [x] Create backend service `backend/core/services/google_calendar.py` for Calendar API integration
+- [x] Implement function to create Google Calendar event with Google Meet link
+- [x] Implement function to add patient and doctor as event participants
+- [x] Create endpoint POST `/patient/consultations/request/` to request consultation
+- [x] Create endpoint POST `/doctor/consultations/:id/schedule/` for doctor to confirm and schedule
+- [x] Store Google Meet link in ConsultationRequest model after scheduling
+- [x] Create endpoint GET `/patient/consultations/` to list patient's consultations with meet links
+- [x] Create endpoint GET `/doctor/consultations/` to list doctor's consultations
+- [x] Add consultation request UI on doctor discovery page (via RequestConsultation button in Doctors.jsx)
+- [x] Add "Join Meeting" button in patient consultation list (opens Google Meet link)
+- [x] Add consultation management UI in doctor dashboard
+- [x] Add consultation status tracking in patient dashboard
+- [x] Add RTK Query endpoints for patient consultations (getPatientConsultations, cancelConsultation)
+- [x] Add RTK Query endpoints for doctor consultations (getDoctorConsultations, scheduleConsultation, rejectConsultation, rescheduleConsultation)
+- [x] Create patient consultations UI page at `/patient/consultations` with list, filter, and actions
+- [x] Create doctor consultations UI page at `/doctor/consultations` with schedule/reject/reschedule dialogs
+- [x] Add Consultations route to App.jsx for both patient and doctor
+- [x] Add Consultations menu item to PatientDashboardLayout
+- [x] Add Consultations menu item to DoctorDashboardLayout
+- [x] Create Dialog component for modal dialogs
 
 ### 2.2 Practitioner Features
 
 #### Test Workflow Page
 
-- [ ] Create TestWorkflow.jsx page at `/practitioner/tests/:test_id/workflow`
-- [ ] Add route for TestWorkflow in App.jsx
-- [ ] Build Step 1: Image Upload form with file input for DICOM/PNG/JPG
-- [ ] Connect upload form to existing `/practitioner/tests/:id/upload/` endpoint
-- [ ] Build Step 2: Clinical Context form with symptoms JSON input
-- [ ] Add vitals input fields (BP, temperature, heart rate, etc.)
-- [ ] Connect clinical context form to `/practitioner/tests/:id/context/` endpoint
-- [ ] Build Step 3: Run AI button with loading state
-- [ ] Display AI results (risk_level, risk_score, confidence, heatmap) after inference
-- [ ] Build Step 4: Refer to Doctor form with doctor selection dropdown
-- [ ] Add urgency selection (ROUTINE/HIGH) and reason textarea
-- [ ] Connect referral form to `/practitioner/tests/:id/refer/` endpoint
-- [ ] Add workflow progress indicator showing current step
+- [x] Create TestWorkflow.jsx page at `/practitioner/tests/:test_id/workflow`
+- [x] Add route for TestWorkflow in App.jsx
+- [x] Build Step 1: Image Upload form with file input for DICOM/PNG/JPG
+- [x] Connect upload form to existing `/practitioner/tests/:id/upload/` endpoint
+- [x] Build Step 2: Clinical Context form with symptoms JSON input
+- [x] Add vitals input fields (BP, temperature, heart rate, etc.)
+- [x] Connect clinical context form to `/practitioner/tests/:id/context/` endpoint
+- [x] Build Step 3: Run AI button with loading state
+- [x] Display AI results (risk_level, risk_score, confidence, heatmap) after inference
+- [x] Build Step 4: Refer to Doctor form with doctor selection dropdown
+- [x] Add urgency selection (ROUTINE/HIGH) and reason textarea
+- [x] Connect referral form to `/practitioner/tests/:id/refer/` endpoint
+- [x] Add workflow progress indicator showing current step
 
 #### Active Tests Management
 
-- [ ] Create ActiveTests.jsx page at `/practitioner/active-tests`
-- [ ] Add route for ActiveTests in App.jsx
-- [ ] Create backend endpoint GET `/practitioner/tests/active/` returning practitioner's tests
-- [ ] Display tests in table with status, patient name, test type, date
-- [ ] Add "Continue Workflow" button linking to TestWorkflow page
-- [ ] Add status filter (UPLOADED, AI_DONE, REFERRED, CLOSED)
+- [x] Create ActiveTests.jsx page at `/practitioner/active-tests`
+- [x] Add route for ActiveTests in App.jsx
+- [x] Create backend endpoint GET `/practitioner/tests/active/` returning practitioner's tests
+- [x] Display tests in table with status, patient name, test type, date
+- [x] Add "Continue Workflow" button linking to TestWorkflow page
+- [x] Add status filter (UPLOADED, AI_DONE, REFERRED, CLOSED)
 
 #### Practitioner Profile & Location
 
@@ -158,6 +173,7 @@
 - [x] Allow practitioner to pin clinic/center location on map
 - [x] Save latitude/longitude coordinates on profile update
 - [x] Create PATCH `/practitioner/me/` endpoint for profile updates including location
+- [x] Create Django management command to seed practitioner data in database
 
 #### Doctor Selection for Referral
 
@@ -169,10 +185,10 @@
 
 #### Doctor Dashboard Layout
 
-- [ ] Create DoctorDashboardLayout.jsx in components/layout/
-- [ ] Add menu items: Dashboard, Pending Referrals, Reviewed Cases, Profile
-- [ ] Add RequireAuthAsDoctor.jsx route guard component
-- [ ] Add doctor routes to App.jsx under RequireAuthAsDoctor
+- [x] Create DoctorDashboardLayout.jsx in components/layout/
+- [x] Add menu items: Dashboard, Pending Referrals, Reviewed Cases, Profile
+- [x] Add RequireAuthAsDoctor.jsx route guard component
+- [x] Add doctor routes to App.jsx under RequireAuthAsDoctor
 
 #### Doctor Dashboard Page
 
@@ -210,15 +226,15 @@
 
 #### Doctor Consultation Management (Google Calendar + Meet)
 
-- [ ] Create Doctor/Consultations.jsx page at `/doctor/consultations`
-- [ ] Add Consultations link to DoctorDashboardLayout menu
-- [ ] Display pending consultation requests from patients
-- [ ] Create scheduling form with date/time picker
-- [ ] On schedule confirmation, call Google Calendar API to create event
-- [ ] Auto-add patient email and doctor email as participants
-- [ ] Display scheduled consultations with Google Meet join links
-- [ ] Add "Start Meeting" button to open Google Meet
-- [ ] Show consultation history with completed/cancelled status
+- [x] Create Doctor/Consultations.jsx page at `/doctor/consultations`
+- [x] Add Consultations link to DoctorDashboardLayout menu
+- [x] Display pending consultation requests from patients
+- [x] Create scheduling form with date/time picker
+- [x] On schedule confirmation, call Google Calendar API to create event
+- [x] Auto-add patient email and doctor email as participants
+- [x] Display scheduled consultations with Google Meet join links
+- [x] Add "Start Meeting" button to open Google Meet
+- [x] Show consultation history with completed/cancelled status
 
 #### Reviewed Cases History
 
@@ -281,20 +297,20 @@
 
 - [x] Add `getPatientMedicalHistory` query to patientApiSlice
 - [x] Add `updatePatientProfile` mutation to patientApiSlice
-- [ ] Add `getPatientDoctors` query to patientApiSlice
-- [ ] Add `getPatientPractitioners` query to patientApiSlice (with location data)
-- [ ] Add `requestConsultation` mutation to patientApiSlice
-- [ ] Add `getPatientConsultations` query to patientApiSlice
+- [x] Add `getPatientDoctors` query to patientApiSlice
+- [x] Add `getPatientPractitioners` query to patientApiSlice (with location data)
+- [x] Add `requestConsultation` mutation to patientApiSlice
+- [x] Add `getPatientConsultations` query to patientApiSlice
 - [ ] Add `getDoctorList` query to practitionerApiSlice
 - [ ] Add `updatePractitionerProfile` mutation to practitionerApiSlice (with location)
-- [ ] Create doctorApiSlice.js with all doctor endpoints
+- [x] Create doctorApiSlice.js with all doctor endpoints
 - [ ] Add `getDoctorReferrals` query to doctorApiSlice
 - [ ] Add `getDoctorCaseDetail` query to doctorApiSlice
 - [ ] Add `submitDoctorReview` mutation to doctorApiSlice
 - [ ] Add `closeDoctorReferral` mutation to doctorApiSlice
-- [ ] Add `getDoctorConsultationRequests` query to doctorApiSlice
-- [ ] Add `scheduleConsultation` mutation to doctorApiSlice
-- [ ] Add `getDoctorConsultations` query to doctorApiSlice
+- [x] Add `getDoctorConsultationRequests` query to doctorApiSlice
+- [x] Add `scheduleConsultation` mutation to doctorApiSlice
+- [x] Add `getDoctorConsultations` query to doctorApiSlice
 
 ### 3.2 Form Validations
 

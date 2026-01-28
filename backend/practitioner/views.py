@@ -63,6 +63,48 @@ class DiagnosticTestCreateView(APIView):
         )
 
 
+class DiagnosticTestDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def get(self, request, test_id):
+        """Get details of a specific diagnostic test"""
+        test = get_object_or_404(DiagnosticTest, id=test_id, practitioner=request.user.practitioner_profile)
+        
+        test_data = {
+            'id': test.id,
+            'patient': test.patient.id,
+            'patient_name': test.patient.user.full_name,
+            'test_type': test.test_type,
+            'status': test.status,
+            'created_at': test.created_at,
+            'image': str(test.raw_image.url) if test.raw_image else None,
+        }
+        
+        # Include clinical context if available
+        try:
+            clinical_context = test.clinicalcontext
+            test_data['clinical_context'] = {
+                'symptoms': clinical_context.symptoms,
+                'vitals': clinical_context.vitals
+            }
+        except ClinicalContext.DoesNotExist:
+            pass
+        
+        # Include AI result if available
+        try:
+            ai_result = test.aiinferenceresult
+            test_data['ai_result'] = {
+                'risk_level': ai_result.risk_level,
+                'risk_score': ai_result.risk_score,
+                'confidence': ai_result.confidence,
+                'heatmap': str(ai_result.heatmap_image.url) if ai_result.heatmap_image else None,
+            }
+        except AIInferenceResult.DoesNotExist:
+            pass
+        
+        return Response(test_data, status=status.HTTP_200_OK)
+
+
 class DiagnosticImageUploadView(APIView):
     permission_classes = [IsAuthenticated, IsPractitioner]
 
@@ -148,6 +190,45 @@ class RunAITestView(APIView):
         test.save(update_fields=["status"])
 
         return Response(AIResultSerializer(ai_result).data)
+
+
+class PractitionerActiveTestsView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def get(self, request):
+        """Get all active/in-progress tests for the practitioner"""
+        practitioner = request.user.practitioner_profile
+        tests = DiagnosticTest.objects.filter(
+            practitioner=practitioner
+        ).exclude(
+            status='CLOSED'
+        ).select_related('patient', 'patient__user').prefetch_related('ai_inference_result')
+        
+        # Format test data for frontend
+        tests_data = []
+        for test in tests:
+            test_dict = {
+                'id': test.id,
+                'patient': test.patient.id,
+                'patient_name': test.patient.user.first_name if test.patient.user.first_name else test.patient.user.name,
+                'test_type': test.test_type,
+                'status': test.status,
+                'created_at': test.created_at,
+                'ai_result': None
+            }
+            
+            # Include AI result if available
+            ai_result = test.ai_inference_result.first() if test.ai_inference_result.exists() else None
+            if ai_result:
+                test_dict['ai_result'] = {
+                    'risk_level': ai_result.risk_level,
+                    'risk_score': ai_result.risk_score,
+                    'confidence': ai_result.confidence
+                }
+            
+            tests_data.append(test_dict)
+        
+        return Response(tests_data, status=status.HTTP_200_OK)
 
 
 class PractitionerMeView(APIView):

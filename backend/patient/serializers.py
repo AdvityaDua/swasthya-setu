@@ -1,7 +1,7 @@
 from datetime import date
 from rest_framework import serializers
 from django.utils import timezone
-from core.models import PatientProfile, DiagnosticTest, AIInferenceResult, Appointment, Referral, DiagnosticReport
+from core.models import PatientProfile, DiagnosticTest, AIInferenceResult, Appointment, Referral, DiagnosticReport, ConsultationRequest, DoctorProfile
 
 BLOOD_GROUP_CHOICES = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
 SURGERY_STATUS = ("never", "former", "current")
@@ -329,6 +329,8 @@ class PatientTestDetailSerializer(serializers.ModelSerializer):
 
 class PatientAppointmentSerializer(serializers.ModelSerializer):
     doctor_name = serializers.SerializerMethodField()
+    practitioner_name = serializers.SerializerMethodField()
+    practitioner_center = serializers.SerializerMethodField()
 
     class Meta:
         model = Appointment
@@ -339,6 +341,8 @@ class PatientAppointmentSerializer(serializers.ModelSerializer):
             'scheduled_time',
             'status',
             'doctor_name',
+            'practitioner_name',
+            'practitioner_center',
         ]
 
     def get_doctor_name(self, obj):
@@ -346,10 +350,30 @@ class PatientAppointmentSerializer(serializers.ModelSerializer):
             return obj.doctor.user.full_name
         return None
 
+    def get_practitioner_name(self, obj):
+        if obj.practitioner:
+            return obj.practitioner.user.full_name
+        return None
+
+    def get_practitioner_center(self, obj):
+        if obj.practitioner:
+            return obj.practitioner.diagnostic_center_name
+        return None
+
 
 class PatientAppointmentCreateSerializer(serializers.Serializer):
     appointment_type = serializers.ChoiceField(choices=['DIAGNOSTIC'])
     scheduled_time = serializers.DateTimeField()
+    practitioner_id = serializers.UUIDField(required=True)
+
+    def validate_practitioner_id(self, value):
+        if value:
+            from core.models import PractitionerProfile
+            try:
+                PractitionerProfile.objects.get(user__id=value)
+            except PractitionerProfile.DoesNotExist:
+                raise serializers.ValidationError("Practitioner not found.")
+        return value
     
 
 class PatientReferralSerializer(serializers.ModelSerializer):
@@ -369,3 +393,101 @@ class PatientReferralSerializer(serializers.ModelSerializer):
         if obj.referred_to:
             return obj.referred_to.user.full_name
         return None
+
+
+class DoctorListSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    specialization = serializers.CharField()
+    hospital_name = serializers.CharField()
+    years_of_experience = serializers.IntegerField()
+    availability_timings = serializers.JSONField(allow_null=True)
+    is_teleconsult_available = serializers.BooleanField()
+
+    def to_representation(self, instance):
+        """Convert DoctorProfile instance to serialized data"""
+        return {
+            'id': instance.user.id,
+            'name': instance.user.full_name,
+            'specialization': instance.get_specialization_display(),
+            'specialization_code': instance.specialization,
+            'hospital_name': instance.hospital_name,
+            'years_of_experience': instance.years_of_experience,
+            'availability_timings': instance.availability_timings or {},
+            'is_teleconsult_available': instance.is_teleconsult_available,
+        }
+
+
+class ConsultationRequestSerializer(serializers.ModelSerializer):
+    """Serialize ConsultationRequest with related doctor and patient info"""
+    doctor_name = serializers.CharField(source='doctor.user.full_name', read_only=True)
+    doctor_email = serializers.CharField(source='doctor.user.email', read_only=True)
+    doctor_specialization = serializers.CharField(source='doctor.get_specialization_display', read_only=True)
+    doctor_hospital = serializers.CharField(source='doctor.hospital_name', read_only=True)
+    patient_name = serializers.CharField(source='patient.user.full_name', read_only=True)
+    patient_email = serializers.CharField(source='patient.user.email', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = ConsultationRequest
+        fields = [
+            'id', 'patient', 'doctor', 'status', 'status_display',
+            'requested_at', 'scheduled_time', 'meet_link', 'calendar_event_id',
+            'doctor_name', 'doctor_email', 'doctor_specialization', 'doctor_hospital',
+            'patient_name', 'patient_email', 'created_at'
+        ]
+        read_only_fields = ['id', 'requested_at', 'created_at', 'meet_link', 'calendar_event_id']
+
+
+class ConsultationRequestCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating consultation requests from patient side"""
+    doctor_id = serializers.UUIDField(write_only=True)
+
+    class Meta:
+        model = ConsultationRequest
+        fields = ['doctor_id']
+
+    def validate_doctor_id(self, value):
+        """Validate that doctor exists"""
+        try:
+            doctor = DoctorProfile.objects.get(user_id=value)
+        except DoctorProfile.DoesNotExist:
+            raise serializers.ValidationError("Doctor not found")
+        return value
+
+    def create(self, validated_data):
+        """Create a new consultation request"""
+        doctor = DoctorProfile.objects.get(user_id=validated_data['doctor_id'])
+        patient = self.context['request'].user.patient_profile
+        
+        # Check if there's already a pending consultation request
+        existing = ConsultationRequest.objects.filter(
+            patient=patient,
+            doctor=doctor,
+            status__in=['PENDING', 'SCHEDULED']
+        ).exists()
+        
+        if existing:
+            raise serializers.ValidationError("You already have an active consultation request with this doctor")
+        
+        consultation = ConsultationRequest.objects.create(
+            patient=patient,
+            doctor=doctor,
+            status='PENDING'
+        )
+        return consultation
+
+
+class ConsultationScheduleSerializer(serializers.ModelSerializer):
+    """Serializer for doctor to schedule consultation with date/time"""
+    scheduled_time = serializers.DateTimeField()
+
+    class Meta:
+        model = ConsultationRequest
+        fields = ['scheduled_time']
+
+    def validate_scheduled_time(self, value):
+        """Validate scheduled time is in the future"""
+        if value <= timezone.now():
+            raise serializers.ValidationError("Scheduled time must be in the future")
+        return value

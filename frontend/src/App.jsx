@@ -4,11 +4,12 @@ import { HomePage, LoginPage, RegisterPage } from "./pages/Home";
 import RequireAuthAsPatient from "./components/RequireAuthAsPatient";
 import RequireAuthAsPractitioner from "./components/RequireAuthAsPractitioner";
 import RequireAuthAsDoctor from "./components/RequireAuthAsDoctor";
-import { Dashboard, MyTests, TestDetail, Referrals, Profile, ProfileEdit, MedicalHistory } from "./pages/Patient";
-import { Dashboard as PractitionerDashboard, PatientLookup, CreateTest, Profile as PractitionerProfile } from "./pages/Practitioner";
+import { Dashboard, MyTests, TestDetail, Referrals, Profile, ProfileEdit, MedicalHistory, Appointments, Practitioners, Doctors, Consultations } from "./pages/Patient";
+import { Dashboard as PractitionerDashboard, PatientLookup, CreateTest, Profile as PractitionerProfile, TestWorkflow, ActiveTests } from "./pages/Practitioner";
 import PatientDashboardLayout from "./components/layout/PatientDashboardLayout";
 import PractitionerDashboardLayout from "./components/layout/PractitionerDashboardLayout";
 import DoctorDashboardLayout from "./components/layout/DoctorDashboardLayout";
+import DoctorConsultations from "./pages/Doctor/Consultations";
 import AuthRestore from "./components/AuthRestore";
 
 function App() {
@@ -24,6 +25,10 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path='tests' element={<MyTests />} />
             <Route path='tests/:test_id' element={<TestDetail />} />
+            <Route path='appointments' element={<Appointments />} />
+            <Route path='practitioners' element={<Practitioners />} />
+            <Route path='doctors' element={<Doctors />} />
+            <Route path='consultations' element={<Consultations />} />
             <Route path='referrals' element={<Referrals />} />
             <Route path='profile' element={<Profile />} />
             <Route path='medical-history' element={<MedicalHistory />} />
@@ -35,11 +40,15 @@ function App() {
             <Route index element={<PractitionerDashboard />} />
             <Route path='patient-lookup' element={<PatientLookup />} />
             <Route path='create-test' element={<CreateTest />} />
+            <Route path='active-tests' element={<ActiveTests />} />
+            <Route path='tests/:test_id/workflow' element={<TestWorkflow />} />
             <Route path='profile' element={<PractitionerProfile />} />
           </Route>
         </Route>
         <Route element={<RequireAuthAsDoctor />}>
-          <Route path="/doctor" element={<DoctorDashboardLayout />} />
+          <Route path="/doctor" element={<DoctorDashboardLayout />}>
+            <Route path='consultations' element={<DoctorConsultations />} />
+          </Route>
         </Route>
       </Routes>
       </AuthRestore>

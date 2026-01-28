@@ -6,6 +6,11 @@ from patient.views import (
     PatientReportDownloadView,
     PatientAppointmentListView,
     PatientAppointmentCreateView,
+    PatientPractitionerListView,
+    PatientDoctorListView,
+    PatientConsultationRequestView,
+    PatientConsultationListView,
+    PatientConsultationDetailView,
     PatientReferralListView,
     PatientMedicalHistoryView,
 )
@@ -18,6 +23,10 @@ urlpatterns = [
     path('medical-history/', PatientMedicalHistoryView.as_view()),
     path('appointments/', PatientAppointmentListView.as_view()),
     path('appointments/book/', PatientAppointmentCreateView.as_view()),
+    path('practitioners/', PatientPractitionerListView.as_view()),
+    path('doctors/', PatientDoctorListView.as_view()),
+    path('consultations/request/', PatientConsultationRequestView.as_view()),
+    path('consultations/', PatientConsultationListView.as_view()),
+    path('consultations/<consultation_id>/', PatientConsultationDetailView.as_view()),
     path('referrals/', PatientReferralListView.as_view())
 ]
-

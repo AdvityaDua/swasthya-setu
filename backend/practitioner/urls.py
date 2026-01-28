@@ -2,19 +2,23 @@ from django.urls import path
 from practitioner.views import (
     PatientLookupView,
     DiagnosticTestCreateView,
+    DiagnosticTestDetailView,
     DiagnosticImageUploadView,
     ClinicalContextCreateView,
     RunAITestView,
     ViewAIResultView,
     ReferralCreateView,
     PractitionerMeView,
+    PractitionerActiveTestsView,
 )
 
 
 urlpatterns = [
     path("me/", PractitionerMeView.as_view()),
     path("patient-search/", PatientLookupView.as_view()),
+    path("tests/active/", PractitionerActiveTestsView.as_view()),
     path("tests/create/", DiagnosticTestCreateView.as_view()),
+    path("tests/<uuid:test_id>/", DiagnosticTestDetailView.as_view()),
     path("tests/<uuid:test_id>/upload/", DiagnosticImageUploadView.as_view()),
     path("tests/<uuid:test_id>/context/", ClinicalContextCreateView.as_view()),
     path("tests/<uuid:test_id>/run-ai/", RunAITestView.as_view()),
