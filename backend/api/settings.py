@@ -153,3 +153,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Additionally expose reports under /reports/ for backward-compatible links
+REPORTS_URL = '/reports/'
+REPORTS_ROOT = os.path.join(MEDIA_ROOT, 'reports')

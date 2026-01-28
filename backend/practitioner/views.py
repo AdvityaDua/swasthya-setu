@@ -9,7 +9,8 @@ from practitioner.serializers import (
     DiagnosticImageUploadSerializer,
     ClinicalContextSerializer,
     AIResultSerializer,
-    ReferralCreateSerializer
+    ReferralCreateSerializer,
+    PractitionerProfileSerializer,
 )
 from core.models import (
     PatientProfile,
@@ -18,6 +19,7 @@ from core.models import (
     Referral,
     AIInferenceResult
 )
+from core.models import DiagnosticReport
 from practitioner.services.ai_service import run_ai_and_generate_report
 
 
@@ -102,6 +104,20 @@ class DiagnosticTestDetailView(APIView):
         except AIInferenceResult.DoesNotExist:
             pass
         
+        # Include referral info if available
+        try:
+            referral = test.referral
+            test_data['referral'] = {
+                'id': referral.id,
+                'referred_to_id': referral.referred_to.id if referral.referred_to else None,
+                'referred_to_name': f"Dr. {referral.referred_to.user.full_name}" if referral.referred_to else None,
+                'urgency': referral.urgency,
+                'reason': referral.reason,
+                'status': referral.status,
+            }
+        except Referral.DoesNotExist:
+            test_data['referral'] = None
+        
         return Response(test_data, status=status.HTTP_200_OK)
 
 
@@ -162,16 +178,25 @@ class ReferralCreateView(APIView):
 
         test = get_object_or_404(DiagnosticTest, id=test_id)
 
-        Referral.objects.create(
+        # Check if referral already exists; if so, update it
+        referral, created = Referral.objects.get_or_create(
             test=test,
-            referred_by=request.user.practitioner_profile,
-            **serializer.validated_data
+            defaults={
+                "referred_by": request.user.practitioner_profile,
+                **serializer.validated_data
+            }
         )
+
+        # If referral already existed, update it with new data
+        if not created:
+            for field, value in serializer.validated_data.items():
+                setattr(referral, field, value)
+            referral.save()
 
         test.status = "REFERRED"
         test.save()
 
-        return Response({"message": "Referral created"})
+        return Response({"message": "Referral created" if created else "Referral updated"})
 
 
 class RunAITestView(APIView):
@@ -202,7 +227,7 @@ class PractitionerActiveTestsView(APIView):
             practitioner=practitioner
         ).exclude(
             status='CLOSED'
-        ).select_related('patient', 'patient__user').prefetch_related('ai_inference_result')
+        ).select_related('patient', 'patient__user')
         
         # Format test data for frontend
         tests_data = []
@@ -210,7 +235,7 @@ class PractitionerActiveTestsView(APIView):
             test_dict = {
                 'id': test.id,
                 'patient': test.patient.id,
-                'patient_name': test.patient.user.first_name if test.patient.user.first_name else test.patient.user.name,
+                'patient_name': test.patient.user.full_name,
                 'test_type': test.test_type,
                 'status': test.status,
                 'created_at': test.created_at,
@@ -218,17 +243,98 @@ class PractitionerActiveTestsView(APIView):
             }
             
             # Include AI result if available
-            ai_result = test.ai_inference_result.first() if test.ai_inference_result.exists() else None
-            if ai_result:
+            try:
+                ai_result = test.aiinferenceresult
                 test_dict['ai_result'] = {
                     'risk_level': ai_result.risk_level,
                     'risk_score': ai_result.risk_score,
                     'confidence': ai_result.confidence
                 }
+                try:
+                    report = DiagnosticReport.objects.filter(test=ai_result.test).first()
+                    if report and report.report_pdf:
+                        test_dict['ai_result']['report_pdf'] = report.report_pdf.url
+                except Exception:
+                    pass
+            except AIInferenceResult.DoesNotExist:
+                pass
             
             tests_data.append(test_dict)
         
         return Response(tests_data, status=status.HTTP_200_OK)
+
+
+class PractitionerClosedTestsView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def get(self, request):
+        """Get all closed/completed tests for the practitioner"""
+        practitioner = request.user.practitioner_profile
+        tests = DiagnosticTest.objects.filter(
+            practitioner=practitioner,
+            status='CLOSED'
+        ).select_related('patient', 'patient__user')
+        
+        # Format test data for frontend
+        tests_data = []
+        for test in tests:
+            test_dict = {
+                'id': test.id,
+                'patient': test.patient.id,
+                'patient_name': test.patient.user.full_name,
+                'test_type': test.test_type,
+                'status': test.status,
+                'created_at': test.created_at,
+                'ai_result': None
+            }
+            
+            # Include AI result if available
+            try:
+                ai_result = test.aiinferenceresult
+                test_dict['ai_result'] = {
+                    'risk_level': ai_result.risk_level,
+                    'risk_score': ai_result.risk_score,
+                    'confidence': ai_result.confidence
+                }
+                try:
+                    report = DiagnosticReport.objects.filter(test=ai_result.test).first()
+                    if report and report.report_pdf:
+                        test_dict['ai_result']['report_pdf'] = report.report_pdf.url
+                except Exception:
+                    pass
+            except AIInferenceResult.DoesNotExist:
+                pass
+            
+            tests_data.append(test_dict)
+        
+        return Response(tests_data, status=status.HTTP_200_OK)
+
+
+class PractitionerDoctorListView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def get(self, request):
+        from core.models import DoctorProfile
+        from doctor.serializers import DoctorListSerializer
+        
+        test_type = request.query_params.get('test_type')
+        
+        # Map test types to doctor specializations
+        test_to_spec_map = {
+            'TB': 'TB',
+            'BREAST_CANCER': 'ONCOLOGY',
+            'DIABETIC': 'GENERAL',
+        }
+        
+        doctors = DoctorProfile.objects.select_related('user').filter(user__is_active=True)
+        
+        # Filter by specialization if test_type is provided
+        if test_type and test_type in test_to_spec_map:
+            specialization = test_to_spec_map[test_type]
+            doctors = doctors.filter(specialization=specialization)
+        
+        serializer = DoctorListSerializer(doctors, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PractitionerMeView(APIView):

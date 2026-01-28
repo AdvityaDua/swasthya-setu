@@ -70,3 +70,21 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
             "longitude",
             "availability_timings",
         ]
+
+
+class DoctorListSerializer(serializers.ModelSerializer):
+    doctor_id = serializers.CharField(source="user.id")
+    name = serializers.CharField(source="user.full_name")
+    
+    class Meta:
+        model = DoctorProfile
+        fields = [
+            "doctor_id",
+            "name",
+            "specialization",
+            "hospital_name",
+            "years_of_experience",
+            "is_teleconsult_available",
+            "latitude",
+            "longitude",
+        ]

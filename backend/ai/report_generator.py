@@ -24,7 +24,16 @@ def generate_report(test, ai_result):
     c.showPage()
 
     if ai_result.heatmap_image:
-        c.drawImage(ai_result.heatmap_image.path, 50, height - 450, width=400)
+        try:
+            heatmap_path = ai_result.heatmap_image.path
+            if heatmap_path and os.path.exists(heatmap_path):
+                c.drawImage(heatmap_path, 50, height - 450, width=400)
+            else:
+                # heatmap file missing on disk; skip embedding
+                pass
+        except Exception:
+            # If anything goes wrong embedding the heatmap, continue without failing
+            pass
 
     c.showPage()
     c.save()

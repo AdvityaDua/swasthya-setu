@@ -7,6 +7,7 @@ from core.models import (
     Referral,
     PractitionerProfile,
 )
+from core.models import DiagnosticReport
 
 
 class PatientLookupSerializer(serializers.ModelSerializer):
@@ -36,9 +37,31 @@ class ClinicalContextSerializer(serializers.ModelSerializer):
 
 
 class AIResultSerializer(serializers.ModelSerializer):
+    heatmap = serializers.SerializerMethodField()
+    generated_at = serializers.DateTimeField(read_only=True)
+    model_name = serializers.CharField(read_only=True)
+    report_pdf = serializers.SerializerMethodField()
+
     class Meta:
         model = AIInferenceResult
-        fields = ["risk_score", "risk_level", "confidence"]
+        fields = ["model_name", "risk_score", "risk_level", "confidence", "heatmap", "generated_at", "report_pdf"]
+
+    def get_heatmap(self, obj):
+        if obj.heatmap_image:
+            try:
+                return obj.heatmap_image.url
+            except Exception:
+                return None
+        return None
+
+    def get_report_pdf(self, obj):
+        try:
+            report = DiagnosticReport.objects.filter(test=obj.test).first()
+            if report and report.report_pdf:
+                return report.report_pdf.url
+        except Exception:
+            return None
+        return None
 
 
 class ReferralCreateSerializer(serializers.ModelSerializer):
@@ -48,6 +71,9 @@ class ReferralCreateSerializer(serializers.ModelSerializer):
 
 
 class PractitionerProfileSerializer(serializers.ModelSerializer):
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    
     class Meta:
         model = PractitionerProfile
         fields = [
@@ -59,5 +85,3 @@ class PractitionerProfileSerializer(serializers.ModelSerializer):
             "latitude",
             "longitude",
         ]
-
-
