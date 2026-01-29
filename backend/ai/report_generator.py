@@ -4,38 +4,203 @@ from django.core.files.base import ContentFile
 import os
 
 
-def generate_report(test, ai_result):
-    path = f"/tmp/report_{test.id}.pdf"
+from ai.bhashini_service import BhashiniService
+
+def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
+    path = f"/tmp/report_{test.id}_{target_lang}.pdf"
     c = canvas.Canvas(path, pagesize=A4)
     width, height = A4
+    y = height - 50
 
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, height - 50, "AI-Assisted Diagnostic Report")
+    # Initialize Bhashini for translation if target_lang is not English
+    bhashini = BhashiniService() if target_lang != "en" else None
+    
+    # Default Labels
+    labels = {
+        "title": "AI-Assisted Diagnostic Report",
+        "patient": "Patient",
+        "date": "Date",
+        "test_type": "Test Type",
+        "status": "Status",
+        "ai_results": "AI Analysis Results",
+        "diagnosis": "Diagnosis",
+        "risk_level": "Risk Level",
+        "confidence": "Confidence",
+        "clinical_context": "Clinical Context",
+        "symptoms": "Symptoms",
+        "vitals": "Vitals",
+        "history": "Patient Health History Snapshot",
+        "doctor_review": "Doctor's Clinical Review",
+        "doctor": "Doctor",
+        "decision": "Decision",
+        "notes_label": "Doctor's Notes:",
+        "disclaimer": "Disclaimer: AI output is assistive and must be reviewed by a qualified medical professional.",
+        "heatmap_title": "Grad-CAM Heatmap Visualization"
+    }
 
+    dynamic_content = {
+        "prediction": ai_result.prediction_label or "N/A",
+        "risk_level_val": ai_result.risk_level,
+    }
+
+    if clinical_context:
+        dynamic_content["symptoms_val"] = ", ".join(clinical_context.symptoms) if isinstance(clinical_context.symptoms, list) else str(clinical_context.symptoms)
+        if clinical_context.vitals:
+            vitals_list = [f"{k}: {v}" for k, v in clinical_context.vitals.items() if v]
+            dynamic_content["vitals_val"] = " | ".join(vitals_list)
+
+    # Translate if needed
+    if bhashini and target_lang != "en":
+        all_text = {**labels, **dynamic_content}
+        translated = bhashini.translate_report_sections(all_text, target_lang)
+        # Update labels and dynamic content with translations
+        for k in labels: labels[k] = translated.get(k, labels[k])
+        for k in dynamic_content: dynamic_content[k] = translated.get(k, dynamic_content[k])
+
+    def draw_section_header(canvas, text, y_pos):
+        canvas.setFont("Helvetica-Bold", 14)
+        canvas.drawString(50, y_pos, text)
+        canvas.line(50, y_pos - 5, width - 50, y_pos - 5)
+        return y_pos - 25
+
+    # Title
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(50, y, labels["title"])
+    y -= 40
+
+    # Basic Info
     c.setFont("Helvetica", 11)
-    c.drawString(50, height - 100, f"Patient: {test.patient.user.full_name}")
-    c.drawString(50, height - 120, f"Test Type: {test.test_type}")
-    c.drawString(50, height - 140, f"Risk Level: {ai_result.risk_level}")
-    c.drawString(50, height - 160, f"Confidence: {ai_result.confidence:.2f}")
+    c.drawString(50, y, f"{labels['patient']}: {test.patient.user.full_name}")
+    c.drawString(300, y, f"{labels['date']}: {test.test_date.strftime('%Y-%m-%d %H:%M')}")
+    y -= 20
+    c.drawString(50, y, f"{labels['test_type']}: {test.get_test_type_display()}")
+    c.drawString(300, y, f"{labels['status']}: {test.get_status_display()}")
+    y -= 40
 
-    c.drawString(50, height - 200, "Disclaimer:")
-    c.drawString(50, height - 220, "AI output is assistive and must be reviewed by a doctor.")
+    # AI Analysis Section
+    y = draw_section_header(c, labels["ai_results"], y)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(60, y, f"{labels['diagnosis']}: {dynamic_content['prediction']}")
+    y -= 20
+    c.setFont("Helvetica", 11)
+    c.drawString(60, y, f"{labels['risk_level']}: {dynamic_content['risk_level_val']}")
+    c.drawString(200, y, f"{labels['confidence']}: {ai_result.confidence:.2f}")
+    y -= 40
 
+    # Clinical Context Section
+    if clinical_context:
+        y = draw_section_header(c, labels["clinical_context"], y)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(60, y, f"{labels['symptoms']}:")
+        y -= 15
+        c.setFont("Helvetica", 10)
+        c.drawString(70, y, dynamic_content.get("symptoms_val", ""))
+        y -= 25
+
+        if clinical_context.vitals:
+            c.setFont("Helvetica-Bold", 11)
+            c.drawString(60, y, f"{labels['vitals']}:")
+            y -= 15
+            c.setFont("Helvetica", 10)
+            c.drawString(70, y, dynamic_content.get("vitals_val", ""))
+            y -= 40
+
+        # Health History Snapshot
+        if clinical_context.auto_history_snapshot:
+            snapshot = clinical_context.auto_history_snapshot
+            y = draw_section_header(c, labels["history"], y)
+            
+            # (Note: Translating the history snapshot keys like 'Known Allergies' might be overkill or complex here, 
+            # let's keep it simple or use translated labels if we want)
+            items = [
+                ("Known Allergies", snapshot.get("known_allergies") or "None"),
+                ("Chronic Conditions", snapshot.get("chronic_conditions") or "None"),
+            ]
+            
+            for label, val in items:
+                if y < 100:
+                    c.showPage()
+                    y = height - 50
+                c.setFont("Helvetica-Bold", 10)
+                c.drawString(60, y, f"{label}:")
+                y -= 15
+                c.setFont("Helvetica", 10)
+                c.drawString(70, y, str(val))
+                y -= 25
+
+    # Doctor Review Section
+    try:
+        referral = getattr(test, 'referral', None)
+        doctor_review = getattr(referral, 'doctor_review', None) if referral else None
+        
+        if doctor_review:
+            y = draw_section_header(c, labels["doctor_review"], y)
+            c.setFont("Helvetica-Bold", 11)
+            c.drawString(60, y, f"{labels['doctor']}: Dr. {doctor_review.doctor.user.full_name}")
+            y -= 20
+            
+            c.setFont("Helvetica-Bold", 11)
+            c.drawString(60, y, f"{labels['decision']}:")
+            c.setFont("Helvetica", 11)
+            c.drawString(120, y, doctor_review.get_decision_display())
+            y -= 20
+            
+            if doctor_review.notes:
+                notes_text = doctor_review.notes
+                if bhashini and target_lang != "en":
+                    notes_text = bhashini.translate_batch([notes_text], target_lang)[0]
+                
+                c.setFont("Helvetica-Bold", 11)
+                c.drawString(60, y, labels["notes_label"])
+                y -= 15
+                c.setFont("Helvetica", 10)
+                c.drawString(70, y, notes_text[:100] + ("..." if len(notes_text) > 100 else ""))
+                y -= 25
+    except Exception:
+        pass
+
+    # Disclaimer
+    if y < 100:
+        c.showPage()
+        y = height - 50
+    c.setFont("Helvetica-Oblique", 9)
+    c.drawString(50, 50, labels["disclaimer"])
+
+    # Heatmap on a new page
     c.showPage()
-
     if ai_result.heatmap_image:
         try:
             heatmap_path = ai_result.heatmap_image.path
             if heatmap_path and os.path.exists(heatmap_path):
-                c.drawImage(heatmap_path, 50, height - 450, width=400)
-            else:
-                # heatmap file missing on disk; skip embedding
-                pass
+                c.setFont("Helvetica-Bold", 14)
+                c.drawString(50, height - 50, labels["heatmap_title"])
+                c.drawImage(heatmap_path, 50, height - 500, width=500, preserveAspectRatio=True)
         except Exception:
-            # If anything goes wrong embedding the heatmap, continue without failing
             pass
 
+    c.save()
+
+    with open(path, "rb") as f:
+        pdf_name = f"report_{test.id}_{target_lang}.pdf"
+        pdf = ContentFile(f.read(), name=pdf_name)
+
+    os.remove(path)
+    return pdf
+
+    # Heatmap on a new page
     c.showPage()
+    if ai_result.heatmap_image:
+        try:
+            heatmap_path = ai_result.heatmap_image.path
+            if heatmap_path and os.path.exists(heatmap_path):
+                c.setFont("Helvetica-Bold", 14)
+                c.drawString(50, height - 50, "Grad-CAM Heatmap Visualization")
+                c.drawImage(heatmap_path, 50, height - 500, width=500, preserveAspectRatio=True)
+            else:
+                pass
+        except Exception:
+            pass
+
     c.save()
 
     with open(path, "rb") as f:

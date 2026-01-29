@@ -19,6 +19,20 @@ BREAST_CANCER_MODEL_PATH = os.path.join(
     "breast_model.pkl"
 )
 
+PNEUMONIA_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "core",
+    "model",
+    "pneumonia.pt"
+)
+
+TB_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "core",
+    "model",
+    "tb.pth"
+)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 

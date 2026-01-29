@@ -199,6 +199,9 @@ const PatientLookup = () => {
                 <SelectContent>
                   <SelectItem value="TB">Tuberculosis (TB) Scan</SelectItem>
                   <SelectItem value="BREAST_CANCER">Breast Cancer Scan</SelectItem>
+                  <SelectItem value="DIABETIC_RETINOPATHY">Diabetic Retinopathy Check</SelectItem>
+                  <SelectItem value="PNEUMONIA">Pneumonia Detection</SelectItem>
+                  <SelectItem value="FRACTURE">Hairline Fracture Detection</SelectItem>
                 </SelectContent>
               </Select>
             </div>

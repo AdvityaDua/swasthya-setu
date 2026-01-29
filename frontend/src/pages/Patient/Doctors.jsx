@@ -18,9 +18,88 @@ import { Loader2, Stethoscope, AlertCircle, CheckCircle2, Users } from "lucide-r
 
 const SPECIALIZATION_OPTIONS = [
   { code: "TB", label: "Tuberculosis" },
-  { code: "ONCOLOGY", label: "Oncology" },
+  { code: "BREAST_CANCER", label: "Breast Cancer" },
+  { code: "DIABETIC_RETINOPATHY", label: "Diabetic Retinopathy" },
+  { code: "PNEUMONIA", label: "Pneumonia" },
+  { code: "FRACTURE", label: "Hairline Fracture" },
   { code: "GENERAL", label: "General Medicine" },
 ];
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
+import { Clock } from "lucide-react";
+
+// Helper component for Availability Display
+const AvailabilityView = ({ timings }) => {
+  if (!timings || Object.keys(timings).length === 0) {
+    return <span className="text-sm text-muted-foreground">Not specified</span>;
+  }
+
+  const daysOrder = {
+    monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7
+  };
+
+  const activeDays = Object.entries(timings)
+    .filter(([_, times]) => times?.available === true)
+    .sort(([dayA], [dayB]) => (daysOrder[dayA.toLowerCase()] || 100) - (daysOrder[dayB.toLowerCase()] || 100));
+
+  if (activeDays.length === 0) {
+    return <span className="text-sm text-muted-foreground">Currently unavailable</span>;
+  }
+
+  // Preview string (e.g., "Mon, Tue, Wed...")
+  const previewText = activeDays.map(([day]) => day.charAt(0).toUpperCase() + day.slice(1, 3)).join(", ");
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="link" className="p-0 h-auto font-normal text-blue-600">
+          View Schedule ({activeDays.length} days)
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Weekly Availability</DialogTitle>
+          <DialogDescription>Standard consultation hours</DialogDescription>
+        </DialogHeader>
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Day</TableHead>
+                <TableHead className="text-right">Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeDays.map(([day, times]) => (
+                <TableRow key={day}>
+                  <TableCell className="font-medium capitalize">{day}</TableCell>
+                  <TableCell className="text-right">
+                    {times.start} - {times.end}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const Doctors = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState("all");
@@ -47,21 +126,6 @@ const Doctors = () => {
     } finally {
       setRequestingDoctorId(null);
     }
-  };
-
-  const formatAvailabilityTimings = (timings) => {
-    if (!timings || Object.keys(timings).length === 0) {
-      return "Not specified";
-    }
-
-    return Object.entries(timings)
-      .map(([day, times]) => {
-        if (typeof times === "object" && times.start && times.end) {
-          return `${day}: ${times.start} - ${times.end}`;
-        }
-        return `${day}: ${times}`;
-      })
-      .join(", ");
   };
 
   if (isLoading) {
@@ -177,10 +241,12 @@ const Doctors = () => {
 
                 {/* Availability */}
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground">Availability</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {formatAvailabilityTimings(doctor.availability_timings)}
+                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> Availability
                   </p>
+                  <div className="text-sm">
+                    <AvailabilityView timings={doctor.availability_timings} />
+                  </div>
                 </div>
 
                 {/* Request Button */}

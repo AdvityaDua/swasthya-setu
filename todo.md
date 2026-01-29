@@ -254,10 +254,16 @@
 
 #### Clinical Context in AI Inference
 
-- [ ] Modify run_ai_and_generate_report to accept clinical context
-- [ ] Include patient health history in AI analysis context
-- [ ] Populate auto_history_snapshot from PatientProfile in ClinicalContext creation
-- [ ] Include context summary in generated PDF report
+- [x] Modify run_ai_and_generate_report to accept clinical context
+- [x] Include patient health history in AI analysis context
+- [x] Populate auto_history_snapshot from PatientProfile in ClinicalContext creation
+- [x] Include context summary in generated PDF report
+
+#### Pneumonia Model Integration
+
+- [x] Implement Pneumonia model inference in `backend/ai/pneumonia/`
+- [x] Update AI Service to handle Pneumonia test type
+- [x] Display Pneumonia-specific labels in UI
 
 #### Diabetic Model Integration
 
@@ -268,10 +274,16 @@
 
 #### Report Enhancements
 
-- [ ] Add patient health history section to PDF report
-- [ ] Add clinical context (symptoms, vitals) to PDF report
-- [ ] Add doctor review section placeholder for post-review reports
-- [ ] Improve PDF styling and layout
+- [x] Add doctor review section placeholder for post-review reports
+- [x] Improve PDF styling and layout
+- [x] Add multi-lingual report selection (dropdown) in Patient UI
+
+#### AI Results & UI Refinements
+
+- [x] Add `prediction_label` to `AIInferenceResult` model
+- [x] Update serializers and views to return absolute media URLs
+- [x] Fix image cropping and visibility in Practitioner and Doctor UI
+- [x] Display specific diagnosis label (e.g., "Pneumonia suspected") in AI results
 
 #### Multilingual Report Generation - Bhashini API Integration
 

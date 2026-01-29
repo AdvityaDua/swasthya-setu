@@ -65,11 +65,18 @@ class DoctorCaseDetailSerializer(serializers.ModelSerializer):
         if not hasattr(obj, "aiinferenceresult"):
             return None
         ai = obj.aiinferenceresult
+        request = self.context.get('request')
+        
+        heatmap_url = ai.heatmap_image.url if ai.heatmap_image else None
+        if heatmap_url and request:
+            heatmap_url = request.build_absolute_uri(heatmap_url)
+            
         return {
             "risk_level": ai.risk_level,
             "risk_score": ai.risk_score,
             "confidence": ai.confidence,
-            "heatmap_image": ai.heatmap_image.url if ai.heatmap_image else None
+            "prediction_label": ai.prediction_label,
+            "heatmap_image": heatmap_url
         }
 
     def get_clinical_context(self, obj):

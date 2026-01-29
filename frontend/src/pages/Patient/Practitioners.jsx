@@ -20,6 +20,9 @@ import { Loader2, MapPin, List, Map as MapIcon, AlertCircle, Navigation } from "
 const TEST_TYPES = [
   { code: "TB", label: "Tuberculosis" },
   { code: "BREAST_CANCER", label: "Breast Cancer" },
+  { code: "DIABETIC_RETINOPATHY", label: "Diabetic Retinopathy" },
+  { code: "PNEUMONIA", label: "Pneumonia" },
+  { code: "FRACTURE", label: "Hairline Fracture" },
 ];
 
 const DEFAULT_MAP_CENTER = [20.5937, 78.9629]; // Center of India
@@ -88,9 +91,9 @@ const Practitioners = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };

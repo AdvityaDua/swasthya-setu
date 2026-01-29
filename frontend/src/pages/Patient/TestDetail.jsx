@@ -15,8 +15,22 @@ import { FrownIcon, InfoIcon, TrendingUpIcon, ShieldAlertIcon, Loader2 } from "l
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
+const LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "hi", name: "Hindi (हिन्दी)" },
+  { code: "mr", name: "Marathi (मराठी)" },
+  { code: "ta", name: "Tamil (தமிழ்)" },
+  { code: "te", name: "Telugu (తెలుగు)" },
+  { code: "kn", name: "Kannada (ಕನ್ನಡ)" },
+  { code: "gu", name: "Gujarati (ગુજરાતી)" },
+  { code: "bn", name: "Bengali (বাংলা)" },
+  { code: "ml", name: "Malayalam (മലയാളം)" },
+  { code: "pa", name: "Punjabi (ਪੰਜਾਬੀ)" },
+];
+
 const TestDetail = () => {
   const { test_id } = useParams();
+  const [selectedLang, setSelectedLang] = React.useState("en");
   const { data: testDetail, isLoading, isSuccess, isError, error } = useGetPatientTestDetailQuery(test_id);
 
   if (isLoading) {
@@ -63,7 +77,7 @@ const TestDetail = () => {
   const report = testDetail.report;
 
   const reportDownloadUrl =
-    report && report.available ? `${API_BASE_URL}${report.download_path}` : null;
+    report && report.available ? `${API_BASE_URL}${report.download_path}?lang=${selectedLang}` : null;
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -84,8 +98,8 @@ const TestDetail = () => {
                 testDetail.status === "COMPLETED"
                   ? "success"
                   : testDetail.status === "PENDING"
-                  ? "secondary"
-                  : "outline"
+                    ? "secondary"
+                    : "outline"
               }
             >
               {testDetail.status}
@@ -99,16 +113,29 @@ const TestDetail = () => {
           )}
 
           {reportDownloadUrl && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Report</p>
-              <a
-                href={reportDownloadUrl}
-                className="inline-flex items-center text-sm font-medium text-primary underline underline-offset-4"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Download PDF report
-              </a>
+            <div className="space-y-4 pt-2 border-t">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Download Report In</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={selectedLang}
+                    onChange={(e) => setSelectedLang(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code}>{lang.name}</option>
+                    ))}
+                  </select>
+                  <a
+                    href={reportDownloadUrl}
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Download PDF
+                  </a>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>

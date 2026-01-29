@@ -24,6 +24,7 @@ from core.models import (
     Referral,
     ConsultationRequest,
     DoctorProfile,
+    AIInferenceResult,
 )
 from core.services.google_calendar import create_consultation_event, cancel_consultation_event
 
@@ -75,17 +76,42 @@ class PatientReportDownloadView(APIView):
     permission_classes = [IsAuthenticated, IsPatient]
 
     def get(self, request, test_id):
+        lang = request.query_params.get('lang', 'en')
+        
         report = get_object_or_404(
             DiagnosticReport,
             test__id=test_id,
             test__patient=request.user.patient_profile
         )
 
-        return FileResponse(
-            report.report_pdf.open(),
-            as_attachment=True,
-            filename=f"report_{test_id}.pdf"
-        )
+        if lang == 'en':
+            return FileResponse(
+                report.report_pdf.open(),
+                as_attachment=True,
+                filename=f"report_{test_id}.pdf"
+            )
+        
+        # Multilingual report generation
+        try:
+            test = report.test
+            ai_result = AIInferenceResult.objects.get(test=test)
+            clinical_context = getattr(test, 'clinicalcontext', None)
+            
+            # Generate translated version
+            translated_pdf = generate_report(test, ai_result, clinical_context, target_lang=lang)
+            
+            return FileResponse(
+                translated_pdf,
+                as_attachment=True,
+                filename=f"report_{test_id}_{lang}.pdf"
+            )
+        except Exception as e:
+            # Fallback to English if translation fails
+            return FileResponse(
+                report.report_pdf.open(),
+                as_attachment=True,
+                filename=f"report_{test_id}.pdf"
+            )
 
 class PatientAppointmentListView(APIView):
     permission_classes = [IsAuthenticated, IsPatient]

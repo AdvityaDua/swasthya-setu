@@ -101,6 +101,7 @@ const Profile = () => {
         try {
             const payload = {
                 ...formData,
+                years_of_experience: parseInt(formData.years_of_experience, 10),
                 availability_timings: availabilityTimings,
                 latitude: roundTo6Decimals(latitude),
                 longitude: roundTo6Decimals(longitude)
@@ -110,8 +111,17 @@ const Profile = () => {
             setSuccessMessage("Profile updated successfully!");
             refetch();
         } catch (err) {
-            console.error(err);
-            setErrorMessage("Failed to update profile. Please try again.");
+            console.error("Profile update failed:", err);
+            let msg = "Failed to update profile. Please try again.";
+            if (err.data) {
+                if (typeof err.data === 'string') msg = err.data;
+                else if (typeof err.data === 'object') {
+                    // Create a list of errors
+                    const errors = Object.entries(err.data).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
+                    msg = errors.length > 0 ? errors.join(' | ') : msg;
+                }
+            }
+            setErrorMessage(msg);
         }
     };
 
@@ -179,7 +189,10 @@ const Profile = () => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="TB">Tuberculosis</SelectItem>
-                                        <SelectItem value="ONCOLOGY">Oncology</SelectItem>
+                                        <SelectItem value="BREAST_CANCER">Breast Cancer</SelectItem>
+                                        <SelectItem value="DIABETIC_RETINOPATHY">Diabetic Retinopathy</SelectItem>
+                                        <SelectItem value="PNEUMONIA">Pneumonia</SelectItem>
+                                        <SelectItem value="FRACTURE">Hairline Fracture</SelectItem>
                                         <SelectItem value="GENERAL">General Medicine</SelectItem>
                                     </SelectContent>
                                 </Select>

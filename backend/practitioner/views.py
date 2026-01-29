@@ -1,6 +1,7 @@
 from rest_framework.views import APIView, Response, status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.http import FileResponse
 
 from practitioner.permissions import IsPractitioner
 from practitioner.serializers import (
@@ -21,6 +22,7 @@ from core.models import (
 )
 from core.models import DiagnosticReport
 from practitioner.services.ai_service import run_ai_and_generate_report
+from ai.report_generator import generate_report
 
 
 class PatientLookupView(APIView):
@@ -79,7 +81,7 @@ class DiagnosticTestDetailView(APIView):
             'test_type': test.test_type,
             'status': test.status,
             'created_at': test.created_at,
-            'image': str(test.raw_image.url) if test.raw_image else None,
+            'image': request.build_absolute_uri(test.raw_image.url) if test.raw_image else None,
         }
         
         # Include clinical context if available
@@ -99,7 +101,8 @@ class DiagnosticTestDetailView(APIView):
                 'risk_level': ai_result.risk_level,
                 'risk_score': ai_result.risk_score,
                 'confidence': ai_result.confidence,
-                'heatmap': str(ai_result.heatmap_image.url) if ai_result.heatmap_image else None,
+                'prediction_label': ai_result.prediction_label,
+                'heatmap': request.build_absolute_uri(ai_result.heatmap_image.url) if ai_result.heatmap_image else None,
             }
         except AIInferenceResult.DoesNotExist:
             pass
@@ -148,12 +151,23 @@ class ClinicalContextCreateView(APIView):
         serializer.is_valid(raise_exception=True)
 
         test = get_object_or_404(DiagnosticTest, id=test_id)
+        patient = test.patient
+        
+        # Capture current health profile snapshot
+        history_snapshot = {
+            "known_allergies": patient.known_allergies,
+            "chronic_conditions": patient.chronic_conditions,
+            "past_surgeries": patient.past_surgeries,
+            "current_medications": patient.current_medications,
+            "lifestyle_indicators": patient.lifestyle_indicators,
+            "medical_history": patient.medical_history,
+        }
 
         ClinicalContext.objects.create(
             test=test,
             symptoms=serializer.validated_data["symptoms"],
             vitals=serializer.validated_data.get("vitals"),
-            auto_history_snapshot={},
+            auto_history_snapshot=history_snapshot,
             entered_by=request.user
         )
 
@@ -165,8 +179,45 @@ class ViewAIResultView(APIView):
 
     def get(self, request, test_id):
         ai = get_object_or_404(AIInferenceResult, test__id=test_id)
-        serializer = AIResultSerializer(ai)
+        serializer = AIResultSerializer(ai, context={'request': request})
         return Response(serializer.data)
+
+
+class PractitionerReportDownloadView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def get(self, request, test_id):
+        lang = request.query_params.get('lang', 'en')
+        report = get_object_or_404(
+            DiagnosticReport,
+            test__id=test_id,
+        )
+
+        if lang == 'en':
+            return FileResponse(
+                report.report_pdf.open(),
+                as_attachment=True,
+                filename=f"report_{test_id}.pdf"
+            )
+        
+        try:
+            test = report.test
+            ai_result = AIInferenceResult.objects.get(test=test)
+            clinical_context = getattr(test, 'clinicalcontext', None)
+            
+            translated_pdf = generate_report(test, ai_result, clinical_context, target_lang=lang)
+            
+            return FileResponse(
+                translated_pdf,
+                as_attachment=True,
+                filename=f"report_{test_id}_{lang}.pdf"
+            )
+        except Exception:
+            return FileResponse(
+                report.report_pdf.open(),
+                as_attachment=True,
+                filename=f"report_{test_id}.pdf"
+            )
 
 
 class ReferralCreateView(APIView):
@@ -214,7 +265,7 @@ class RunAITestView(APIView):
         test.status = "AI_DONE"
         test.save(update_fields=["status"])
 
-        return Response(AIResultSerializer(ai_result).data)
+        return Response(AIResultSerializer(ai_result, context={'request': request}).data)
 
 
 class PractitionerActiveTestsView(APIView):
@@ -248,12 +299,14 @@ class PractitionerActiveTestsView(APIView):
                 test_dict['ai_result'] = {
                     'risk_level': ai_result.risk_level,
                     'risk_score': ai_result.risk_score,
-                    'confidence': ai_result.confidence
+                    'confidence': ai_result.confidence,
+                    'prediction_label': ai_result.prediction_label,
+                    'heatmap': request.build_absolute_uri(ai_result.heatmap_image.url) if ai_result.heatmap_image else None,
                 }
                 try:
                     report = DiagnosticReport.objects.filter(test=ai_result.test).first()
                     if report and report.report_pdf:
-                        test_dict['ai_result']['report_pdf'] = report.report_pdf.url
+                        test_dict['ai_result']['report_pdf'] = request.build_absolute_uri(report.report_pdf.url)
                 except Exception:
                     pass
             except AIInferenceResult.DoesNotExist:
@@ -294,12 +347,14 @@ class PractitionerClosedTestsView(APIView):
                 test_dict['ai_result'] = {
                     'risk_level': ai_result.risk_level,
                     'risk_score': ai_result.risk_score,
-                    'confidence': ai_result.confidence
+                    'confidence': ai_result.confidence,
+                    'prediction_label': ai_result.prediction_label,
+                    'heatmap': request.build_absolute_uri(ai_result.heatmap_image.url) if ai_result.heatmap_image else None,
                 }
                 try:
                     report = DiagnosticReport.objects.filter(test=ai_result.test).first()
                     if report and report.report_pdf:
-                        test_dict['ai_result']['report_pdf'] = report.report_pdf.url
+                        test_dict['ai_result']['report_pdf'] = request.build_absolute_uri(report.report_pdf.url)
                 except Exception:
                     pass
             except AIInferenceResult.DoesNotExist:

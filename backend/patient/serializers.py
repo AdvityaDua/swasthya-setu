@@ -281,11 +281,17 @@ class PatientTestDetailSerializer(serializers.ModelSerializer):
             return None
 
         ai = obj.aiinferenceresult
+        request = self.context.get('request')
+        heatmap_url = ai.heatmap_image.url if ai.heatmap_image else None
+        if heatmap_url and request:
+            heatmap_url = request.build_absolute_uri(heatmap_url)
+            
         return {
             'risk_level': ai.risk_level,
             'risk_score': ai.risk_score,
             'confidence': ai.confidence,
-            'heatmap_url': ai.heatmap_image.url if ai.heatmap_image else None,
+            'prediction_label': ai.prediction_label,
+            'heatmap_url': heatmap_url,
         }
 
     def get_referral(self, obj):
@@ -323,7 +329,7 @@ class PatientTestDetailSerializer(serializers.ModelSerializer):
 
         return {
             'available': True,
-            'download_path': f"/api/patient/reports/{obj.id}/",
+            'download_path': request.build_absolute_uri(f"/api/patient/reports/{obj.id}/") if request else f"/api/patient/reports/{obj.id}/",
         }
 
 

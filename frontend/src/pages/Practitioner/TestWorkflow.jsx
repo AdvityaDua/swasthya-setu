@@ -26,6 +26,19 @@ import {
 } from "../../components/ui/select";
 import { Loader2, AlertCircle, CheckCircle2, Upload, FileText, Zap, Share2, Image, Activity } from "lucide-react";
 
+const LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "hi", name: "Hindi (हिन्दी)" },
+  { code: "mr", name: "Marathi (मराठी)" },
+  { code: "ta", name: "Tamil (தமிழ்)" },
+  { code: "te", name: "Telugu (తెలుగు)" },
+  { code: "kn", name: "Kannada (ಕನ್ನಡ)" },
+  { code: "gu", name: "Gujarati (ગુજરાતી)" },
+  { code: "bn", name: "Bengali (বাংলা)" },
+  { code: "ml", name: "Malayalam (മലയാളം)" },
+  { code: "pa", name: "Punjabi (ਪੰਜਾਬੀ)" },
+];
+
 const TestWorkflow = () => {
   const { test_id } = useParams();
   const navigate = useNavigate();
@@ -40,6 +53,7 @@ const TestWorkflow = () => {
   const [referralReason, setReferralReason] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedLang, setSelectedLang] = useState("en");
 
   // API hooks
   const { data: testDetail, isLoading: testLoading, error: testError } = useGetTestDetailQuery(test_id);
@@ -52,7 +66,7 @@ const TestWorkflow = () => {
     skip: !shouldFetchAI,
   });
   const [referToDoctor, { isLoading: referringDoctor }] = useReferToDoctorMutation();
-  
+
   // Fetch doctors list, filtering by test type if available
   const { data: doctorsList, isLoading: doctorsLoading } = useGetDoctorsListQuery(
     testDetail ? { test_type: testDetail.test_type } : { test_type: null }
@@ -183,13 +197,12 @@ const TestWorkflow = () => {
           {[1, 2, 3, 4].map((step) => (
             <div
               key={step}
-              className={`flex-1 p-3 rounded-lg text-center font-semibold transition-all ${
-                step === currentStep
-                  ? "bg-blue-600 text-white"
-                  : step < currentStep
+              className={`flex-1 p-3 rounded-lg text-center font-semibold transition-all ${step === currentStep
+                ? "bg-blue-600 text-white"
+                : step < currentStep
                   ? "bg-green-100 text-green-800"
                   : "bg-gray-200 text-gray-600"
-              }`}
+                }`}
             >
               Step {step}
             </div>
@@ -378,17 +391,20 @@ const TestWorkflow = () => {
 
             {aiResult && (
               <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm font-semibold text-muted-foreground">Detection</p>
+                    <p className="text-lg font-bold mt-2 text-blue-600">{aiResult.prediction_label || "N/A"}</p>
+                  </div>
                   <div className="p-4 border rounded-lg">
                     <p className="text-sm font-semibold text-muted-foreground">Risk Level</p>
                     <Badge
-                      className={`mt-2 ${
-                        aiResult.risk_level === "HIGH"
-                          ? "bg-red-100 text-red-800"
-                          : aiResult.risk_level === "MEDIUM"
+                      className={`mt-2 ${aiResult.risk_level === "HIGH"
+                        ? "bg-red-100 text-red-800"
+                        : aiResult.risk_level === "MEDIUM"
                           ? "bg-yellow-100 text-yellow-800"
                           : "bg-green-100 text-green-800"
-                      }`}
+                        }`}
                     >
                       {aiResult.risk_level}
                     </Badge>
@@ -406,7 +422,7 @@ const TestWorkflow = () => {
                 {aiResult.heatmap && (
                   <div className="space-y-2">
                     <p className="text-sm font-semibold">AI Heatmap Visualization</p>
-                    <img src={aiResult.heatmap} alt="AI Heatmap" className="w-full border rounded-lg max-h-64 object-cover" />
+                    <img src={aiResult.heatmap} alt="AI Heatmap" className="w-full border rounded-lg max-h-[500px] object-contain bg-black" />
                   </div>
                 )}
 
@@ -418,26 +434,44 @@ const TestWorkflow = () => {
                 )}
 
                 {aiResult.report_pdf && (() => {
-                  const url = aiResult.report_pdf.startsWith("http") ? aiResult.report_pdf : `${API_ORIGIN}${aiResult.report_pdf}`;
+                  const url = aiResult.report_pdf.includes("?")
+                    ? `${aiResult.report_pdf}&lang=${selectedLang}`
+                    : `${aiResult.report_pdf}?lang=${selectedLang}`;
+
                   return (
-                    <div className="pt-2 flex gap-2">
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md"
-                      >
-                        <FileText className="h-4 w-4" />
-                        View Report
-                      </a>
-                      <a
-                        href={url}
-                        download
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border text-indigo-700 rounded-md"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Download PDF
-                      </a>
+                    <div className="pt-2 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="report-lang" className="text-sm">Report Language:</Label>
+                        <select
+                          id="report-lang"
+                          value={selectedLang}
+                          onChange={(e) => setSelectedLang(e.target.value)}
+                          className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {LANGUAGES.map((lang) => (
+                            <option key={lang.code} value={lang.code}>{lang.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md text-sm"
+                        >
+                          <FileText className="h-4 w-4" />
+                          View Report
+                        </a>
+                        <a
+                          href={url}
+                          download
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border text-indigo-700 rounded-md text-sm"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Download PDF
+                        </a>
+                      </div>
                     </div>
                   );
                 })()}

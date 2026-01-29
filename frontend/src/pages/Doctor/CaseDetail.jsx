@@ -35,6 +35,19 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from "date-fns";
 
+const LANGUAGES = [
+    { code: "en", name: "English" },
+    { code: "hi", name: "Hindi (हिन्दी)" },
+    { code: "mr", name: "Marathi (मराठी)" },
+    { code: "ta", name: "Tamil (தமிழ்)" },
+    { code: "te", name: "Telugu (తెలుగు)" },
+    { code: "kn", name: "Kannada (ಕನ್ನಡ)" },
+    { code: "gu", name: "Gujarati (ગુજરાતી)" },
+    { code: "bn", name: "Bengali (বাংলা)" },
+    { code: "ml", name: "Malayalam (മലയാളം)" },
+    { code: "pa", name: "Punjabi (ਪੰਜਾਬী)" },
+];
+
 const CaseDetail = () => {
     const { test_id } = useParams();
     const navigate = useNavigate();
@@ -52,6 +65,7 @@ const CaseDetail = () => {
     const [scheduleDateTime, setScheduleDateTime] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const [selectedLang, setSelectedLang] = useState("en");
 
     // Clear messages on route change or after timeout
     useEffect(() => {
@@ -273,7 +287,7 @@ const CaseDetail = () => {
                                 {/* Raw Image */}
                                 <div className="p-4 border-r border-b md:border-b-0 space-y-2">
                                     <p className="text-sm font-medium text-muted-foreground mb-2">Original Scan</p>
-                                    <div className="aspect-square bg-black rounded-lg overflow-hidden flex items-center justify-center relative">
+                                    <div className="min-h-[300px] bg-black rounded-lg overflow-hidden flex items-center justify-center relative border">
                                         {caseDetail.raw_image ? (
                                             <img
                                                 src={caseDetail.raw_image}
@@ -290,7 +304,7 @@ const CaseDetail = () => {
                                 <div className="p-4 space-y-4">
                                     <div className="space-y-2">
                                         <p className="text-sm font-medium text-muted-foreground mb-2">AI Heatmap</p>
-                                        <div className="aspect-square bg-black rounded-lg overflow-hidden flex items-center justify-center relative">
+                                        <div className="min-h-[300px] bg-black rounded-lg overflow-hidden flex items-center justify-center relative border">
                                             {caseDetail.ai_result?.heatmap_image ? (
                                                 <img
                                                     src={caseDetail.ai_result.heatmap_image}
@@ -307,8 +321,12 @@ const CaseDetail = () => {
                                     </div>
 
                                     <div className="space-y-3 pt-2">
+                                        <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                                            <span className="text-sm font-semibold text-blue-900">AI Detection</span>
+                                            <span className="text-sm font-bold text-blue-800">{caseDetail.ai_result?.prediction_label || "N/A"}</span>
+                                        </div>
                                         <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                                            <span className="text-sm text-muted-foreground">Prediction</span>
+                                            <span className="text-sm text-muted-foreground">Risk Category</span>
                                             <Badge
                                                 className={`
                                                     ${caseDetail.ai_result?.risk_level === 'HIGH' ? 'bg-red-100 text-red-700 hover:bg-red-200' : ''}
@@ -320,11 +338,37 @@ const CaseDetail = () => {
                                                 {caseDetail.ai_result?.risk_level || "UNKNOWN"} RISK
                                             </Badge>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm px-2">
+                                        <div className="flex justify-between items-center text-sm px-2 border-b pb-3">
                                             <span className="text-muted-foreground">Confidence Score</span>
                                             <span className="font-mono font-medium">
                                                 {(caseDetail.ai_result?.confidence * 100).toFixed(1)}%
                                             </span>
+                                        </div>
+
+                                        <div className="pt-2 space-y-3 px-2">
+                                            <div className="flex items-center gap-2">
+                                                <Label htmlFor="report-lang" className="text-xs text-muted-foreground">Report Language:</Label>
+                                                <select
+                                                    id="report-lang"
+                                                    value={selectedLang}
+                                                    onChange={(e) => setSelectedLang(e.target.value)}
+                                                    className="flex h-8 rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    {LANGUAGES.map((lang) => (
+                                                        <option key={lang.code} value={lang.code}>{lang.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <Button asChild variant="outline" size="sm" className="w-full gap-2 text-indigo-700 border-indigo-200 hover:bg-indigo-50">
+                                                <a
+                                                    href={`http://127.0.0.1:8000/api/practitioner/tests/${caseDetail.id}/report/?lang=${selectedLang}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    <FileText className="h-4 w-4" />
+                                                    View Diagnostic Report
+                                                </a>
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>

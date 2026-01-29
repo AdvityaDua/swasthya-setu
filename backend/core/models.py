@@ -85,7 +85,10 @@ class PatientProfile(models.Model):
 class DoctorProfile(models.Model):
     SPECIALIZATION_CHOICES = (
         ('TB', 'Tuberculosis'),
-        ('ONCOLOGY', 'Oncology'),
+        ('BREAST_CANCER', 'Breast Cancer'),
+        ('DIABETIC_RETINOPATHY', 'Diabetic Retinopathy'),
+        ('PNEUMONIA', 'Pneumonia'),
+        ('FRACTURE', 'Hairline Fracture'),
         ('GENERAL', 'General Medicine'),
     )
 
@@ -151,8 +154,11 @@ class PastMedicalHistory(models.Model):
 
 class DiagnosticTest(models.Model):
     TEST_TYPE_CHOICES = (
-        ('TB', 'Tuberculosis'),
-        ('BREAST_CANCER', 'Breast Cancer'),
+        ('TB', 'Tuberculosis Screening'),
+        ('BREAST_CANCER', 'Breast Cancer Screening'),
+        ('DIABETIC_RETINOPATHY', 'Diabetic Retinopathy Check'),
+        ('PNEUMONIA', 'Pneumonia Detection'),
+        ('FRACTURE', 'Hairline Fracture Detection'),
     )
 
     STATUS_CHOICES = (
@@ -209,6 +215,7 @@ class AIInferenceResult(models.Model):
     risk_score = models.FloatField()
     risk_level = models.CharField(max_length=20, choices=RISK_LEVEL_CHOICES)
     confidence = models.FloatField()
+    prediction_label = models.CharField(max_length=100, null=True, blank=True)
 
     heatmap_image = models.ImageField(upload_to='heatmaps/', null=True, blank=True)
 

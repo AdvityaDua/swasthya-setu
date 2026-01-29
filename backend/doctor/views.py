@@ -11,10 +11,11 @@ from doctor.serializers import (
     DoctorProfileSerializer,
     DoctorReviewedCaseSerializer,
 )
-from core.models import Referral, DiagnosticTest, ConsultationRequest
+from core.models import Referral, DiagnosticTest, ConsultationRequest, AIInferenceResult
 from doctor.models import DoctorReview
 from patient.serializers import ConsultationRequestSerializer, ConsultationScheduleSerializer
 from core.services.google_calendar import create_consultation_event, cancel_consultation_event
+from ai.report_generator import generate_report
 
 
 class DoctorReferralListView(APIView):
@@ -43,7 +44,7 @@ class DoctorCaseDetailView(APIView):
             referral__referred_to=request.user.doctor_profile
         )
 
-        serializer = DoctorCaseDetailSerializer(test)
+        serializer = DoctorCaseDetailSerializer(test, context={'request': request})
         return Response(serializer.data)
 
 
@@ -68,6 +69,24 @@ class DoctorReviewCreateView(APIView):
 
         referral.status = "REVIEWED"
         referral.save()
+
+        # Re-generate report to include doctor review
+        try:
+            test = referral.test
+            ai_result = AIInferenceResult.objects.get(test=test)
+            clinical_context = getattr(test, 'clinicalcontext', None)
+            from core.models import DiagnosticReport
+            
+            new_pdf = generate_report(test, ai_result, clinical_context)
+            
+            # Update existing report
+            report = DiagnosticReport.objects.filter(test=test).first()
+            if report:
+                report.report_pdf.save(f"report_{test.id}.pdf", new_pdf, save=True)
+                report.doctor_signed = True
+                report.save()
+        except Exception as e:
+            print(f"Error regenerating report: {e}")
 
         return Response({"message": "Review submitted"})
 

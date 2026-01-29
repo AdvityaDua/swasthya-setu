@@ -44,7 +44,10 @@ const PREFERRED_LANGUAGES = [
 
 const SPECIALIZATIONS = [
   { value: "TB", label: "Tuberculosis" },
-  { value: "ONCOLOGY", label: "Oncology" },
+  { value: "BREAST_CANCER", label: "Breast Cancer" },
+  { value: "DIABETIC_RETINOPATHY", label: "Diabetic Retinopathy" },
+  { value: "PNEUMONIA", label: "Pneumonia" },
+  { value: "FRACTURE", label: "Hairline Fracture" },
   { value: "GENERAL", label: "General Medicine" },
 ];
 
