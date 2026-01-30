@@ -21,8 +21,7 @@ from core.models import (
     AIInferenceResult
 )
 from core.models import DiagnosticReport
-from practitioner.services.ai_service import run_ai_and_generate_report
-from ai.report_generator import generate_report
+from practitioner.services.ai_service import run_ai_and_generate_report, generate_report
 
 
 class PatientLookupView(APIView):
@@ -180,6 +179,7 @@ class ViewAIResultView(APIView):
     def get(self, request, test_id):
         ai = get_object_or_404(AIInferenceResult, test__id=test_id)
         serializer = AIResultSerializer(ai, context={'request': request})
+        print(f"DEBUG: ViewAIResultView - Data: {serializer.data}")
         return Response(serializer.data)
 
 
@@ -219,6 +219,40 @@ class PractitionerReportDownloadView(APIView):
                 filename=f"report_{test_id}.pdf"
             )
 
+
+class RegenerateReportView(APIView):
+    permission_classes = [IsAuthenticated, IsPractitioner]
+
+    def post(self, request, test_id):
+        test = get_object_or_404(DiagnosticTest, id=test_id)
+        language = request.data.get('language', 'en')
+        
+        try:
+            ai_result = AIInferenceResult.objects.get(test=test)
+            clinical_context = getattr(test, 'clinicalcontext', None)
+            
+            # Generate new PDF
+            pdf = generate_report(test, ai_result, clinical_context, target_lang=language)
+            
+            # Update the existing report record (overwrite)
+            report, created = DiagnosticReport.objects.update_or_create(
+                test=test,
+                defaults={
+                    "report_pdf": pdf,
+                    # We might want to keep the doctors signature if it was signed, 
+                    # but usually regenerating implies a draft state. 
+                    # For now let's keep it simple and just update the pdf.
+                }
+            )
+            
+            # Return the new file URL
+            report_url = request.build_absolute_uri(report.report_pdf.url)
+            return Response({"report_url": report_url}, status=status.HTTP_200_OK)
+            
+        except AIInferenceResult.DoesNotExist:
+             return Response({"error": "AI Inference result not found for this test."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ReferralCreateView(APIView):
     permission_classes = [IsAuthenticated, IsPractitioner]
@@ -260,7 +294,8 @@ class RunAITestView(APIView):
             practitioner=request.user.practitioner_profile
         )
 
-        ai_result = run_ai_and_generate_report(test)
+        language = request.data.get('language', 'en')
+        ai_result = run_ai_and_generate_report(test, target_lang=language)
 
         test.status = "AI_DONE"
         test.save(update_fields=["status"])

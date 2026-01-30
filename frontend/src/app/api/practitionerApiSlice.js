@@ -32,9 +32,17 @@ export const practitionerApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     runAIInference: builder.mutation({
-      query: (test_id) => ({
+      query: ({ test_id, language }) => ({
         url: `practitioner/tests/${test_id}/run-ai/`,
         method: "POST",
+        body: { language },
+      }),
+    }),
+    regenerateReport: builder.mutation({
+      query: ({ test_id, language }) => ({
+        url: `practitioner/tests/${test_id}/regenerate-report/`,
+        method: "POST",
+        body: { language },
       }),
     }),
     referToDoctor: builder.mutation({
@@ -97,5 +105,6 @@ export const {
   useGetPractitionerProfileQuery,
   useUpdatePractitionerProfileMutation,
   useGetDoctorsListQuery,
+  useRegenerateReportMutation,
 } = practitionerApiSlice;
 

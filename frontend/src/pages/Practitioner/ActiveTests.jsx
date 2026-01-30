@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 import { Loader2, AlertCircle, TrendingUp, Zap, CheckCircle2, Clock, FileText } from "lucide-react";
 import { API_ORIGIN } from "../../app/api";
+import ReportManager from "@/components/ReportManager";
 
 const ActiveTests = () => {
   const navigate = useNavigate();
@@ -184,30 +185,24 @@ const ActiveTests = () => {
                             <Zap className="h-3 w-3" /> AI Result
                           </div>
                           {test.ai_result.report_pdf && (() => {
-                            const url = test.ai_result.report_pdf.startsWith('http') ? test.ai_result.report_pdf : `${API_ORIGIN}${test.ai_result.report_pdf}`;
                             return (
                               <div className="flex gap-2">
-                                <a
-                                  href={url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md text-sm"
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  View Report
-                                </a>  
+                                <ReportManager
+                                  testId={test.id}
+                                  initialLanguage="en" // Default to en as we don't store language preference on test model yet
+                                  reportUrl={test.ai_result.report_pdf}
+                                />
                               </div>
                             );
                           })()}
                         </span>
                         <Badge
-                          className={`${
-                            test.ai_result.risk_level === "HIGH"
-                              ? "bg-red-100 text-red-800"
-                              : test.ai_result.risk_level === "MEDIUM"
+                          className={`${test.ai_result.risk_level === "HIGH"
+                            ? "bg-red-100 text-red-800"
+                            : test.ai_result.risk_level === "MEDIUM"
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-green-100 text-green-800"
-                          }`}
+                            }`}
                         >
                           Risk: {test.ai_result.risk_level}
                         </Badge>
@@ -215,7 +210,7 @@ const ActiveTests = () => {
                           <span className="text-sm font-medium">Score: {test.ai_result.risk_score.toFixed(2)}</span>
                         )}
                       </div>
-                      
+
                     </div>
                   )}
                 </div>

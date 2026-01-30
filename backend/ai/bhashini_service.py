@@ -12,10 +12,10 @@ class BhashiniService:
     Uses the ULCA Pipeline API for translating report content into Indian languages.
     """
     
-    BASE_URL = "https://meity-auth.ulcacontrib.org/ulca/apis/v4/model/getModelsPipeline"
+    BASE_URL = "https://meity-auth.ulcacontrib.org/ulca/apis/v0/model/getModelsPipeline"
     COMPUTE_URL = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
     
-    PIPELINE_ID = "64392f967f7aed59a3c46a6f" # Standard Translation Pipeline ID
+    PIPELINE_ID = "64392f96daac500b55c543cd" # Initial Pipeline Model
 
     def __init__(self):
         self.api_key = os.getenv("BHASHINI_UDYAT_KEY")
@@ -32,12 +32,12 @@ class BhashiniService:
             return text_list
 
         try:
-            # 1. Get Pipeline Config
             headers = {
                 "ulcaApiKey": self.api_key,
-                "userID": self.user_id,
                 "Content-Type": "application/json"
             }
+            if self.user_id:
+                headers["userID"] = self.user_id
             
             payload = {
                 "pipelineTasks": [
@@ -57,7 +57,12 @@ class BhashiniService:
             }
             
             config_response = requests.post(self.BASE_URL, headers=headers, json=payload, timeout=10)
-            config_response.raise_for_status()
+            try:
+                config_response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                logger.error(f"Bhashini Config Error: {e}")
+                logger.error(f"Response: {config_response.text}")
+                return text_list
             config_data = config_response.json()
             
             # Extract service details

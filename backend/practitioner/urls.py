@@ -13,6 +13,7 @@ from practitioner.views import (
     PractitionerClosedTestsView,
     PractitionerDoctorListView,
     PractitionerReportDownloadView,
+    RegenerateReportView,
 )
 
 
@@ -29,5 +30,6 @@ urlpatterns = [
     path("tests/<uuid:test_id>/ai-result/", ViewAIResultView.as_view()),
     path("tests/<uuid:test_id>/refer/", ReferralCreateView.as_view()),
     path("tests/<uuid:test_id>/report/", PractitionerReportDownloadView.as_view()),
+    path("tests/<uuid:test_id>/regenerate-report/", RegenerateReportView.as_view()),
     path("doctors/", PractitionerDoctorListView.as_view()),
 ]

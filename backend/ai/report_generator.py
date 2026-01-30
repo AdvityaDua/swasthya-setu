@@ -57,19 +57,57 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         for k in labels: labels[k] = translated.get(k, labels[k])
         for k in dynamic_content: dynamic_content[k] = translated.get(k, dynamic_content[k])
 
+    # Register Font
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    
+    font_name = "Helvetica"
+    font_bold = "Helvetica-Bold"
+    
+    if target_lang != "en":
+        try:
+            fonts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "fonts")
+            
+            # Map language codes to font filenames and keys
+            # Default to Devanagari for hi, mr
+            font_map = {
+                "pa": ("NotoSansGurmukhi-Regular.ttf", "NotoSansGurmukhi"),
+                "ta": ("NotoSansTamil-Regular.ttf", "NotoSansTamil"),
+                "te": ("NotoSansTelugu-Regular.ttf", "NotoSansTelugu"),
+                "kn": ("NotoSansKannada-Regular.ttf", "NotoSansKannada"),
+                "gu": ("NotoSansGujarati-Regular.ttf", "NotoSansGujarati"),
+                "bn": ("NotoSansBengali-Regular.ttf", "NotoSansBengali"),
+                "ml": ("NotoSansMalayalam-Regular.ttf", "NotoSansMalayalam"),
+            }
+            
+            # Get font info or default to Devanagari
+            font_filename, font_key = font_map.get(target_lang, ("NotoSansDevanagari-Regular.ttf", "NotoSansDevanagari"))
+            
+            font_path = os.path.join(fonts_dir, font_filename)
+
+            if os.path.exists(font_path):
+                pdfmetrics.registerFont(TTFont(font_key, font_path))
+                font_name = font_key
+                font_bold = font_key # Using regular for bold if bold not available
+            else:
+                print(f"Font file not found: {font_path}")
+                
+        except Exception as e:
+            print(f"Font registration failed: {e}")
+
     def draw_section_header(canvas, text, y_pos):
-        canvas.setFont("Helvetica-Bold", 14)
+        canvas.setFont(font_bold, 14)
         canvas.drawString(50, y_pos, text)
         canvas.line(50, y_pos - 5, width - 50, y_pos - 5)
         return y_pos - 25
 
     # Title
-    c.setFont("Helvetica-Bold", 18)
+    c.setFont(font_bold, 18)
     c.drawString(50, y, labels["title"])
     y -= 40
 
     # Basic Info
-    c.setFont("Helvetica", 11)
+    c.setFont(font_name, 11)
     c.drawString(50, y, f"{labels['patient']}: {test.patient.user.full_name}")
     c.drawString(300, y, f"{labels['date']}: {test.test_date.strftime('%Y-%m-%d %H:%M')}")
     y -= 20
@@ -79,10 +117,10 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
 
     # AI Analysis Section
     y = draw_section_header(c, labels["ai_results"], y)
-    c.setFont("Helvetica-Bold", 12)
+    c.setFont(font_bold, 12)
     c.drawString(60, y, f"{labels['diagnosis']}: {dynamic_content['prediction']}")
     y -= 20
-    c.setFont("Helvetica", 11)
+    c.setFont(font_name, 11)
     c.drawString(60, y, f"{labels['risk_level']}: {dynamic_content['risk_level_val']}")
     c.drawString(200, y, f"{labels['confidence']}: {ai_result.confidence:.2f}")
     y -= 40
@@ -90,18 +128,18 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
     # Clinical Context Section
     if clinical_context:
         y = draw_section_header(c, labels["clinical_context"], y)
-        c.setFont("Helvetica-Bold", 11)
+        c.setFont(font_bold, 11)
         c.drawString(60, y, f"{labels['symptoms']}:")
         y -= 15
-        c.setFont("Helvetica", 10)
+        c.setFont(font_name, 10)
         c.drawString(70, y, dynamic_content.get("symptoms_val", ""))
         y -= 25
 
         if clinical_context.vitals:
-            c.setFont("Helvetica-Bold", 11)
+            c.setFont(font_bold, 11)
             c.drawString(60, y, f"{labels['vitals']}:")
             y -= 15
-            c.setFont("Helvetica", 10)
+            c.setFont(font_name, 10)
             c.drawString(70, y, dynamic_content.get("vitals_val", ""))
             y -= 40
 
@@ -121,10 +159,10 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
                 if y < 100:
                     c.showPage()
                     y = height - 50
-                c.setFont("Helvetica-Bold", 10)
+                c.setFont(font_bold, 10)
                 c.drawString(60, y, f"{label}:")
                 y -= 15
-                c.setFont("Helvetica", 10)
+                c.setFont(font_name, 10)
                 c.drawString(70, y, str(val))
                 y -= 25
 
@@ -135,13 +173,13 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         
         if doctor_review:
             y = draw_section_header(c, labels["doctor_review"], y)
-            c.setFont("Helvetica-Bold", 11)
+            c.setFont(font_bold, 11)
             c.drawString(60, y, f"{labels['doctor']}: Dr. {doctor_review.doctor.user.full_name}")
             y -= 20
             
-            c.setFont("Helvetica-Bold", 11)
+            c.setFont(font_bold, 11)
             c.drawString(60, y, f"{labels['decision']}:")
-            c.setFont("Helvetica", 11)
+            c.setFont(font_name, 11)
             c.drawString(120, y, doctor_review.get_decision_display())
             y -= 20
             
@@ -150,10 +188,10 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
                 if bhashini and target_lang != "en":
                     notes_text = bhashini.translate_batch([notes_text], target_lang)[0]
                 
-                c.setFont("Helvetica-Bold", 11)
+                c.setFont(font_bold, 11)
                 c.drawString(60, y, labels["notes_label"])
                 y -= 15
-                c.setFont("Helvetica", 10)
+                c.setFont(font_name, 10)
                 c.drawString(70, y, notes_text[:100] + ("..." if len(notes_text) > 100 else ""))
                 y -= 25
     except Exception:
@@ -163,7 +201,7 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
     if y < 100:
         c.showPage()
         y = height - 50
-    c.setFont("Helvetica-Oblique", 9)
+    c.setFont(font_name, 9) # Using font_name assuming Italic not available for NotoSans
     c.drawString(50, 50, labels["disclaimer"])
 
     # Heatmap on a new page
@@ -172,7 +210,7 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         try:
             heatmap_path = ai_result.heatmap_image.path
             if heatmap_path and os.path.exists(heatmap_path):
-                c.setFont("Helvetica-Bold", 14)
+                c.setFont(font_bold, 14)
                 c.drawString(50, height - 50, labels["heatmap_title"])
                 c.drawImage(heatmap_path, 50, height - 500, width=500, preserveAspectRatio=True)
         except Exception:

@@ -14,6 +14,7 @@ import { API_ORIGIN } from "../../app/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import ReportManager from "@/components/ReportManager";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
@@ -26,7 +27,7 @@ import {
 } from "../../components/ui/select";
 import { Loader2, AlertCircle, CheckCircle2, Upload, FileText, Zap, Share2, Image, Activity } from "lucide-react";
 
-const LANGUAGES = [
+export const LANGUAGES = [
   { code: "en", name: "English" },
   { code: "hi", name: "Hindi (हिन्दी)" },
   { code: "mr", name: "Marathi (मराठी)" },
@@ -132,7 +133,7 @@ const TestWorkflow = () => {
 
   const handleRunAI = async () => {
     try {
-      await runAI(test_id).unwrap();
+      await runAI({ test_id, language: selectedLang }).unwrap();
       setSuccessMessage("AI inference completed!");
       setErrorMessage("");
       setCurrentStep(4);
@@ -373,6 +374,25 @@ const TestWorkflow = () => {
                 <p className="text-sm text-muted-foreground">
                   Click the button below to run AI analysis on the uploaded image with clinical context.
                 </p>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-lang-select">Report Language</Label>
+                  <Select value={selectedLang} onValueChange={setSelectedLang}>
+                    <SelectTrigger id="ai-lang-select">
+                      <SelectValue placeholder="Select Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map((lang) => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                          {lang.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    The report will be generated in this language.
+                  </p>
+                </div>
+
                 <Button onClick={handleRunAI} disabled={runningAI} className="w-full">
                   {runningAI ? (
                     <>
@@ -433,45 +453,19 @@ const TestWorkflow = () => {
                   </div>
                 )}
 
-                {aiResult.report_pdf && (() => {
-                  const url = aiResult.report_pdf.includes("?")
-                    ? `${aiResult.report_pdf}&lang=${selectedLang}`
-                    : `${aiResult.report_pdf}?lang=${selectedLang}`;
+                {aiResult && (() => {
+                  const baseUrl = `${import.meta.env.VITE_API_URL || '/api'}/practitioner/tests/${test_id}/report/`;
+                  // We default to 'en' or selectedLang if available. 
+                  // Note: The helper component handles language update.
+                  const initialUrl = `${baseUrl}?lang=en`;
 
                   return (
-                    <div className="pt-2 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="report-lang" className="text-sm">Report Language:</Label>
-                        <select
-                          id="report-lang"
-                          value={selectedLang}
-                          onChange={(e) => setSelectedLang(e.target.value)}
-                          className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {LANGUAGES.map((lang) => (
-                            <option key={lang.code} value={lang.code}>{lang.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex gap-2">
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md text-sm"
-                        >
-                          <FileText className="h-4 w-4" />
-                          View Report
-                        </a>
-                        <a
-                          href={url}
-                          download
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-white border text-indigo-700 rounded-md text-sm"
-                        >
-                          <FileText className="h-4 w-4" />
-                          Download PDF
-                        </a>
-                      </div>
+                    <div className="pt-2">
+                      <ReportManager
+                        testId={test_id}
+                        initialLanguage={selectedLang}
+                        reportUrl={`${baseUrl}?lang=${selectedLang}`}
+                      />
                     </div>
                   );
                 })()}

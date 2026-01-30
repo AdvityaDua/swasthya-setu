@@ -246,11 +246,11 @@
 
 #### TB Model Integration
 
-- [ ] Implement TB model inference in backend/ai/tb/ directory
-- [ ] Create TBModel class similar to BreastCancerModel
-- [ ] Create TB inference function with GradCAM support
-- [ ] Add TB case handling in run_ai_and_generate_report service
-- [ ] Route test_type="TB" to appropriate AI model
+- [x] Implement TB model inference in backend/ai/tb/ directory
+- [x] Create TBModel class similar to BreastCancerModel
+- [x] Create TB inference function with GradCAM support
+- [x] Add TB case handling in run_ai_and_generate_report service
+- [x] Route test_type="TB" to appropriate AI model
 
 #### Clinical Context in AI Inference
 
@@ -287,17 +287,17 @@
 
 #### Multilingual Report Generation - Bhashini API Integration
 
-- [ ] Register for Bhashini API access at bhashini.gov.in
-- [ ] Create backend service `backend/ai/bhashini_service.py` for Bhashini API integration
-- [ ] Implement translation function for text content using Bhashini NMT (Neural Machine Translation)
+- [x] Register for Bhashini API access at bhashini.gov.in
+- [x] Create backend service `backend/ai/bhashini_service.py` for Bhashini API integration
+- [x] Implement translation function for text content using Bhashini NMT (Neural Machine Translation)
 - [ ] Add supported languages list: Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Odia
 - [ ] Create function to translate report sections (summary, risk level explanation, recommendations)
-- [ ] Modify `generate_report()` to accept target_language parameter
-- [ ] Translate AI insights section to patient's preferred language
-- [ ] Translate disclaimer and instructions to patient's preferred language
-- [ ] Keep medical terms in English with translated explanations
-- [ ] Create endpoint GET `/patient/reports/:test_id/?lang=hi` to download report in specific language
-- [ ] Add language selection dropdown in patient test detail before report download
+- [x] Modify `generate_report()` to accept target_language parameter
+- [x] Translate AI insights section to patient's preferred language
+- [x] Translate disclaimer and instructions to patient's preferred language
+- [x] Keep medical terms in English with translated explanations
+- [x] Create endpoint GET `/patient/reports/:test_id/?lang=hi` to download report in specific language
+- [x] Add language selection dropdown in patient test detail before report download
 - [ ] Cache translated content to reduce API calls for repeated downloads
 - [ ] Handle Bhashini API errors gracefully with fallback to English
 

@@ -7,10 +7,11 @@ from core.models import AIInferenceResult, DiagnosticReport
 from ai.breast_cancer.inference import predict_breast_cancer
 from ai.pneumonia.inference import predict_pneumonia
 from ai.tb.inference import predict_tb
+from ai.hairline_fracture.inference import predict_hairline_fracture
 from ai.report_generator import generate_report
 
 
-def run_ai_and_generate_report(test):
+def run_ai_and_generate_report(test, target_lang="en"):
     result = {}
     model_name = test.test_type
     risk_level = "LOW"
@@ -47,6 +48,18 @@ def run_ai_and_generate_report(test):
             risk_level = "MODERATE"
         else:
             risk_level = "LOW"
+
+    elif test.test_type == "FRACTURE":
+        # Uses default model path inside inference.py if 2nd arg is None
+        # or we could add settings.HAIRLINE_MODEL_PATH
+        result = predict_hairline_fracture(
+            test.raw_image.path,
+            None  
+        )
+        if result["diagnosis"] == "Fracture Detected":
+            risk_level = "HIGH"
+        else:
+            risk_level = "LOW"
     
     # Add other models here...
     else:
@@ -54,13 +67,15 @@ def run_ai_and_generate_report(test):
         # For now, maybe raise error or return None, but let's assume we implement step by step.
         raise NotImplementedError(f"AI model for {test.test_type} not implemented yet.")
 
-    ai_result = AIInferenceResult.objects.create(
+    ai_result, _ = AIInferenceResult.objects.update_or_create(
         test=test,
-        model_name=model_name,
-        risk_score=result["confidence"],
-        risk_level=risk_level,
-        confidence=result["confidence"],
-        prediction_label=result.get("prediction")
+        defaults={
+            "model_name": model_name,
+            "risk_score": result["confidence"],
+            "risk_level": risk_level,
+            "confidence": result["confidence"],
+            "prediction_label": result.get("prediction")
+        }
     )
 
     # Save heatmap
@@ -75,13 +90,16 @@ def run_ai_and_generate_report(test):
 
     # Generate PDF with clinical context if available
     clinical_context = getattr(test, 'clinicalcontext', None)
-    pdf = generate_report(test, ai_result, clinical_context)
+    print(f"DEBUG: Calling generate_report with target_lang: {target_lang}")
+    pdf = generate_report(test, ai_result, clinical_context, target_lang=target_lang)
 
-    DiagnosticReport.objects.create(
+    DiagnosticReport.objects.update_or_create(
         test=test,
-        report_pdf=pdf,
-        final_risk_level=risk_level,
-        doctor_signed=False
+        defaults={
+            "report_pdf": pdf,
+            "final_risk_level": risk_level,
+            "doctor_signed": False
+        }
     )
 
     return ai_result
