@@ -1,8 +1,8 @@
 import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react'
 import { login as loginAction, logout, removeToken } from '../slices/userSlice'
 
-export const API_BASE_URL = 'http://127.0.0.1:8000/api/';
-export const API_ORIGIN = 'http://127.0.0.1:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.swasthya-setu.advitya-dua.dev/api/';
+export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'https://api.swasthya-setu.advitya-dua.dev';
 
 const baseQuery = fetchBaseQuery({
     baseUrl: API_BASE_URL,
@@ -30,13 +30,13 @@ const baseQueryWithRefresh = async (args, api, extraOptions) => {
         },
             api,
             extraOptions);
-        
+
         if (refreshResult.data?.access) {
             console.log("Token refreshed");
             api.dispatch(loginAction(refreshResult.data));
             result = await baseQuery(args, api, extraOptions);
         }
-        else{
+        else {
             console.error('Token Refresh Failed. Logging Out.');
             api.dispatch(logout());
         }
