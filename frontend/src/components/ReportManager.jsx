@@ -71,7 +71,7 @@ const ReportManager = ({ testId, initialLanguage = "en", reportUrl: initialRepor
 
     return (
         <div className="space-y-2">
-            <div className="flex items-center gap-4 p-4 border rounded-lg bg-slate-50">
+            <div className="flex items-center gap-4 p-4 border rounded-lg bg-slate-50 w-full">
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-slate-700">Report Language:</span>
                     <Select value={language} onValueChange={setLanguage}>

@@ -326,10 +326,11 @@ class PatientTestDetailSerializer(serializers.ModelSerializer):
             _ = obj.diagnosticreport
         except DiagnosticReport.DoesNotExist:
             return None
-
+        
+        request = self.context.get('request')
         return {
             'available': True,
-            'download_path': request.build_absolute_uri(f"/api/patient/reports/{obj.id}/") if request else f"/api/patient/reports/{obj.id}/",
+            'download_path': obj.diagnosticreport.report_pdf.url if obj.diagnosticreport.report_pdf else None
         }
 
 

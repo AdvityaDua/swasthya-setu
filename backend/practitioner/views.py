@@ -221,7 +221,7 @@ class PractitionerReportDownloadView(APIView):
 
 
 class RegenerateReportView(APIView):
-    permission_classes = [IsAuthenticated, IsPractitioner]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, test_id):
         test = get_object_or_404(DiagnosticTest, id=test_id)

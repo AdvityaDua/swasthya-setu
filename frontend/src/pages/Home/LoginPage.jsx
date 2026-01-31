@@ -80,7 +80,7 @@ const LoginPage = () => {
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
-      <article className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-900 py-8">
+      <article className="flex-1 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 py-8 gap-6">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">Login</CardTitle>
@@ -143,6 +143,35 @@ const LoginPage = () => {
               </Button>
             </p>
           </CardFooter>
+        </Card>
+
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-lg text-center">Test Credentials</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="flex justify-between border-b pb-2">
+              <span className="font-semibold">Patient:</span>
+              <div className="text-right">
+                <p>9000000001</p>
+                <p className="text-muted-foreground text-xs">password123</p>
+              </div>
+            </div>
+            <div className="flex justify-between border-b pb-2">
+              <span className="font-semibold">Practitioner:</span>
+              <div className="text-right">
+                <p>9000000002</p>
+                <p className="text-muted-foreground text-xs">password123</p>
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold">Doctor:</span>
+              <div className="text-right">
+                <p>9000000003</p>
+                <p className="text-muted-foreground text-xs">password123</p>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </article>
       <Footer />
