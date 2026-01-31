@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { Loader2 } from "lucide-react";
 import { useRefreshMutation } from "../app/api/userApiSlice";
 import { login as loginAction } from "../app/slices/userSlice";
 
@@ -27,6 +28,8 @@ export default function AuthRestore({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [refresh] = useRefreshMutation();
+
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +60,8 @@ export default function AuthRestore({ children }) {
         if (!cancelled) {
           /* no session / invalid refresh — stay on current page */
         }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
     };
 
@@ -66,6 +71,14 @@ export default function AuthRestore({ children }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   return children;
 }

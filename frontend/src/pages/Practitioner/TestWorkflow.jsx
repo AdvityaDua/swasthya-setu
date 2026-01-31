@@ -10,7 +10,6 @@ import {
   useSearchPatientQuery,
   useGetDoctorsListQuery,
 } from "../../app/api/practitionerApiSlice";
-import { API_ORIGIN } from "../../app/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -393,7 +392,7 @@ const TestWorkflow = () => {
                   </p>
                 </div>
 
-                <Button onClick={handleRunAI} disabled={runningAI} className="w-full">
+                <Button onClick={handleRunAI} className="w-full">
                   {runningAI ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -454,17 +453,12 @@ const TestWorkflow = () => {
                 )}
 
                 {aiResult && (() => {
-                  const baseUrl = `${import.meta.env.VITE_API_URL || '/api'}/practitioner/tests/${test_id}/report/`;
-                  // We default to 'en' or selectedLang if available. 
-                  // Note: The helper component handles language update.
-                  const initialUrl = `${baseUrl}?lang=en`;
-
                   return (
                     <div className="pt-2">
                       <ReportManager
                         testId={test_id}
                         initialLanguage={selectedLang}
-                        reportUrl={`${baseUrl}?lang=${selectedLang}`}
+                        reportUrl={aiResult.report_url}
                       />
                     </div>
                   );
