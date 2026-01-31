@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight, ShieldCheck } from "lucide-react"
+import { NavLink } from "react-router-dom"
 
 export default function HeroSection() {
   return (
@@ -22,12 +23,16 @@ export default function HeroSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-            <Button size="lg" className="px-8 h-12 text-base font-semibold">
-              Get Started <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="lg" className="px-8 h-12 text-base font-semibold bg-transparent">
-              Learn More
-            </Button>
+            <NavLink to="/register">
+              <Button size="lg" className="px-8 h-12 text-base font-semibold">
+                Get Started <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </NavLink>
+            <NavLink to="/login">
+              <Button variant="outline" size="lg" className="px-8 h-12 text-base font-semibold bg-transparent">
+                Login
+              </Button>
+            </NavLink>
           </div>
 
           <div className="flex items-center justify-center lg:justify-start gap-8 mt-8 opacity-70 grayscale">
@@ -46,7 +51,7 @@ export default function HeroSection() {
         <div className="relative">
           {/* PLACEHOLDER: Healthcare illustration */}
           <img
-          src="/home/center.png"
+            src="/home/center.png"
             width="100%"
             height="450px"
             alt="Modern Healthcare AI Illustration with Doctors"

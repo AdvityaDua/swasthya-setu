@@ -1,6 +1,6 @@
 import { Outlet, NavLink } from "react-router-dom"
 import { Button } from "../ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "../ui/sheet"
 import { Menu, LayoutDashboard, Stethoscope, FileText, UserIcon, Loader2, LogOut } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutAction } from "../../app/slices/userSlice"
@@ -40,34 +40,34 @@ const DashboardLayout = ({ portalName, menuItems }) => {
         <nav className="flex-1 space-y-1 p-4">
           {menuItems.map((item) => (
             <NavLink to={item.path} key={item.label} end={item.end}>
-            {({ isActive }) => (
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start gap-3 px-3 py-6 text-slate-500 hover:text-primary hover:bg-slate-50 transition-all group relative overflow-hidden",
-                  isActive && "font-bold text-primary bg-slate-50"
-                )}
-              >
-                <div
+              {({ isActive }) => (
+                <Button
+                  variant="ghost"
                   className={cn(
-                    "p-1.5 rounded-md bg-slate-100 group-hover:bg-white transition-colors border border-transparent group-hover:border-slate-200",
-                    item.color
+                    "w-full justify-start gap-3 px-3 py-6 text-slate-500 hover:text-primary hover:bg-slate-50 transition-all group relative overflow-hidden",
+                    isActive && "font-bold text-primary bg-slate-50"
                   )}
                 >
-                  {item.icon && <item.icon className="h-4 w-4" />}
-                </div>
-          
-                <span className="font-medium">{item.label}</span>
-          
-                <div
-                  className={cn(
-                    "absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-primary rounded-r-full transition-all duration-300",
-                    isActive ? "h-6" : "h-0"
-                  )}
-                />
-              </Button>
-            )}
-          </NavLink>
+                  <div
+                    className={cn(
+                      "p-1.5 rounded-md bg-slate-100 group-hover:bg-white transition-colors border border-transparent group-hover:border-slate-200",
+                      item.color
+                    )}
+                  >
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                  </div>
+
+                  <span className="font-medium">{item.label}</span>
+
+                  <div
+                    className={cn(
+                      "absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-primary rounded-r-full transition-all duration-300",
+                      isActive ? "h-6" : "h-0"
+                    )}
+                  />
+                </Button>
+              )}
+            </NavLink>
           ))}
         </nav>
 
@@ -100,10 +100,22 @@ const DashboardLayout = ({ portalName, menuItems }) => {
               </div>
               <nav className="p-4 space-y-2">
                 {menuItems.map((item) => (
-                  <Button key={item.label} variant="ghost" className="w-full justify-start gap-3 py-6 text-slate-600">
-                    {item.icon && <item.icon className={cn("h-5 w-5", item.color)} />}
-                    {item.label}
-                  </Button>
+                  <SheetClose asChild key={item.label}>
+                    <NavLink to={item.path} end={item.end}>
+                      {({ isActive }) => (
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "w-full justify-start gap-3 py-6 text-slate-600",
+                            isActive && "text-primary bg-slate-50 font-semibold"
+                          )}
+                        >
+                          {item.icon && <item.icon className={cn("h-5 w-5", item.color)} />}
+                          {item.label}
+                        </Button>
+                      )}
+                    </NavLink>
+                  </SheetClose>
                 ))}
               </nav>
             </SheetContent>
