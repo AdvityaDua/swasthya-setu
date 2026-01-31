@@ -6,6 +6,7 @@ from core.models import (
     AIInferenceResult,
     Referral,
     PractitionerProfile,
+    DoctorProfile,
 )
 from core.models import DiagnosticReport
 
@@ -59,9 +60,11 @@ class AIResultSerializer(serializers.ModelSerializer):
 
 
 class ReferralCreateSerializer(serializers.ModelSerializer):
+    doctor = serializers.PrimaryKeyRelatedField(source='referred_to', queryset=DoctorProfile.objects.all())
+
     class Meta:
         model = Referral
-        fields = ["referred_to", "urgency", "reason"]
+        fields = ["doctor", "urgency", "reason"]
 
 
 class PractitionerProfileSerializer(serializers.ModelSerializer):

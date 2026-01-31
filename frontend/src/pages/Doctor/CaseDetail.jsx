@@ -476,9 +476,9 @@ const CaseDetail = () => {
                                             <SelectValue placeholder="Select decision" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="CONFIRM_AI">Confirm AI Result</SelectItem>
+                                            <SelectItem value="CONFIRM">Confirm AI Result</SelectItem>
                                             <SelectItem value="OVERRIDE">Override / Correct Result</SelectItem>
-                                            <SelectItem value="RECOMMEND_TESTS">Recommend Further Testing</SelectItem>
+                                            <SelectItem value="MORE_TESTS">Recommend Further Testing</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

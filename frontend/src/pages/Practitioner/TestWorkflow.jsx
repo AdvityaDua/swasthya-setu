@@ -499,7 +499,7 @@ const TestWorkflow = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {doctorsLoading ? (
-                    <SelectItem disabled value="">Loading...</SelectItem>
+                    <SelectItem disabled value="loading_doctors">Loading...</SelectItem>
                   ) : doctorsList && doctorsList.length > 0 ? (
                     doctorsList.map((doctor) => (
                       <SelectItem key={doctor.doctor_id} value={doctor.doctor_id}>
@@ -507,7 +507,7 @@ const TestWorkflow = () => {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem disabled value="">No doctors available</SelectItem>
+                    <SelectItem disabled value="no_doctors_available">No doctors available</SelectItem>
                   )}
                 </SelectContent>
               </Select>

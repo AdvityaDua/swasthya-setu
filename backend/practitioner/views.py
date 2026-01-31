@@ -2,6 +2,7 @@ from rest_framework.views import APIView, Response, status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
+from django.db.models import Q
 
 from practitioner.permissions import IsPractitioner
 from practitioner.serializers import (
@@ -412,8 +413,10 @@ class PractitionerDoctorListView(APIView):
         # Map test types to doctor specializations
         test_to_spec_map = {
             'TB': 'TB',
-            'BREAST_CANCER': 'ONCOLOGY',
-            'DIABETIC': 'GENERAL',
+            'BREAST_CANCER': 'BREAST_CANCER',
+            'DIABETIC_RETINOPATHY': 'DIABETIC_RETINOPATHY',
+            'PNEUMONIA': 'PNEUMONIA',
+            'FRACTURE': 'FRACTURE',
         }
         
         doctors = DoctorProfile.objects.select_related('user').filter(user__is_active=True)
@@ -421,7 +424,7 @@ class PractitionerDoctorListView(APIView):
         # Filter by specialization if test_type is provided
         if test_type and test_type in test_to_spec_map:
             specialization = test_to_spec_map[test_type]
-            doctors = doctors.filter(specialization=specialization)
+            doctors = doctors.filter(Q(specialization=specialization) | Q(specialization='GENERAL'))
         
         serializer = DoctorListSerializer(doctors, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

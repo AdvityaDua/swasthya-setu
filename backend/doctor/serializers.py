@@ -147,7 +147,7 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
 
 
 class DoctorListSerializer(serializers.ModelSerializer):
-    doctor_id = serializers.CharField(source="user.id")
+    doctor_id = serializers.CharField(source="id")
     name = serializers.CharField(source="user.full_name")
     
     class Meta:
