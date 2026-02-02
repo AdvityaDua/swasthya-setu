@@ -6,7 +6,8 @@ The platform follows a **doctor-in-the-loop** approach and prioritizes ethical A
 
 ---
 
-# To see the demo video, kindly open the following link: https://drive.google.com/drive/folders/1WebXfmmmn6YEvm6yXNRkYZqH_WQyKCgq 
+#To see the demo video, 
+kindly open the following link: https://drive.google.com/drive/folders/1WebXfmmmn6YEvm6yXNRkYZqH_WQyKCgq 
 
 
 ## 🚀 Vision & Goals
