@@ -94,23 +94,23 @@ export default function ProfileEdit() {
       chronic_conditions: profile.chronic_conditions || "",
       past_surgeries: Array.isArray(profile.past_surgeries)
         ? profile.past_surgeries.filter((s) => s && typeof s === "object").map((s) => ({
-            procedure: s.procedure || "",
-            date: toDateStr(s.date),
-            hospital: s.hospital || "",
-            outcome: s.outcome || "",
-            notes: s.notes || "",
-          }))
+          procedure: s.procedure || "",
+          date: toDateStr(s.date),
+          hospital: s.hospital || "",
+          outcome: s.outcome || "",
+          notes: s.notes || "",
+        }))
         : [],
       current_medications: Array.isArray(profile.current_medications)
         ? profile.current_medications.filter((m) => m && typeof m === "object").map((m) => ({
-            name: m.name || "",
-            dosage: m.dosage || "",
-            frequency: m.frequency || "",
-            route: m.route || "",
-            start_date: toDateStr(m.start_date),
-            ongoing: !!m.ongoing,
-            prescribed_for: m.prescribed_for || "",
-          }))
+          name: m.name || "",
+          dosage: m.dosage || "",
+          frequency: m.frequency || "",
+          route: m.route || "",
+          start_date: toDateStr(m.start_date),
+          ongoing: !!m.ongoing,
+          prescribed_for: m.prescribed_for || "",
+        }))
         : [],
       lifestyle: {
         smoking: {
@@ -288,6 +288,7 @@ export default function ProfileEdit() {
               <Input
                 id="date_of_birth"
                 type="date"
+                max={new Date().toISOString().split("T")[0]}
                 value={form.date_of_birth}
                 onChange={(e) => set("date_of_birth", e.target.value)}
                 aria-invalid={!!getErr("date_of_birth")}
@@ -320,6 +321,8 @@ export default function ProfileEdit() {
                 value={form.emergency_contact}
                 onChange={(e) => set("emergency_contact", e.target.value.replace(/\D/g, "").slice(0, 15))}
                 placeholder="e.g. 9876543210"
+                pattern="[0-9]{10,15}"
+                title="10-15 digit phone number"
                 aria-invalid={!!getErr("emergency_contact")}
               />
               {getErr("emergency_contact") && (
@@ -396,6 +399,7 @@ export default function ProfileEdit() {
                     <Input
                       type="date"
                       placeholder="Date *"
+                      max={new Date().toISOString().split("T")[0]}
                       value={s.date}
                       onChange={(e) => setSurgery(i, "date", e.target.value)}
                       className="w-[140px]"
@@ -475,6 +479,7 @@ export default function ProfileEdit() {
                     <Input
                       type="date"
                       placeholder="Start date"
+                      max={new Date().toISOString().split("T")[0]}
                       value={m.start_date}
                       onChange={(e) => setMedication(i, "start_date", e.target.value)}
                       className="w-[140px]"
@@ -586,7 +591,11 @@ export default function ProfileEdit() {
                     max={24}
                     step={0.5}
                     value={form.lifestyle.sleep_hours_avg}
-                    onChange={(e) => setLifestyle("sleep_hours_avg", null, e.target.value)}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (val < 0 || val > 24) return;
+                      setLifestyle("sleep_hours_avg", null, e.target.value)
+                    }}
                     placeholder="e.g. 7"
                     aria-invalid={!!getErr("lifestyle_indicators")}
                   />

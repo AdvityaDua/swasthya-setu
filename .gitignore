@@ -33,5 +33,5 @@ dist-ssr
 *.sw?
 
 credentials/
-developer_handover/
-developer_handover.zip
+github_actions_backend
+github_actions_backend.pub

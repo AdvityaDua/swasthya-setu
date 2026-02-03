@@ -246,6 +246,8 @@ function RegisterPage() {
           type="text"
           placeholder="9876543210"
           required
+          pattern="[6-9][0-9]{9}"
+          title="Ten digit Indian mobile number starting with 6-9"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
@@ -279,6 +281,8 @@ function RegisterPage() {
           id="abhaId"
           type="text"
           placeholder="xxxx-xxxx-xxxx-xxxx"
+          pattern="[0-9]{2}-[0-9]{4}-[0-9]{4}-[0-9]{4}"
+          title="Format: XX-XXXX-XXXX-XXXX (14 digits with hyphens)"
           value={abhaId}
           onChange={(e) => setAbhaId(e.target.value)}
         />
@@ -302,6 +306,7 @@ function RegisterPage() {
           id="password"
           type="password"
           required
+          minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -319,6 +324,7 @@ function RegisterPage() {
         <Input
           id="dateOfBirth"
           type="date"
+          max={new Date().toISOString().split("T")[0]}
           value={dateOfBirth}
           onChange={(e) => setDateOfBirth(e.target.value)}
         />
@@ -364,6 +370,8 @@ function RegisterPage() {
           type="text"
           placeholder="9876543210"
           required
+          pattern="[0-9]{10,15}"
+          title="10-15 digit phone number"
           value={emergencyContact}
           onChange={(e) => setEmergencyContact(e.target.value)}
         />

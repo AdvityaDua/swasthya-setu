@@ -153,9 +153,12 @@ const Doctors = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            {requestError?.data?.detail ||
-              requestError?.data?.message ||
-              "Failed to send consultation request. Please try again."}
+            {(() => {
+              if (!requestError?.data) return "Failed to send consultation request. Please try again.";
+              if (Array.isArray(requestError.data) && requestError.data.length > 0) return requestError.data[0];
+              if (requestError.data.non_field_errors && requestError.data.non_field_errors.length > 0) return requestError.data.non_field_errors[0];
+              return requestError.data.detail || requestError.data.message || "Failed to send consultation request. Please try again.";
+            })()}
           </AlertDescription>
         </Alert>
       )}

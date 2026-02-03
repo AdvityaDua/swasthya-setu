@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '../../components/ui/badge';
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
+import ReportManager from "@/components/ReportManager";
 import {
     Select,
     SelectContent,
@@ -207,24 +208,27 @@ const CaseDetail = () => {
                                     Directly schedule a video with {caseDetail.patient_name}. A Google Meet link will be generated automatically.
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                    <Label>Date & Time</Label>
-                                    <Input
-                                        type="datetime-local"
-                                        value={scheduleDateTime}
-                                        onChange={(e) => setScheduleDateTime(e.target.value)}
-                                        min={new Date().toISOString().slice(0, 16)}
-                                    />
+                            <form onSubmit={(e) => { e.preventDefault(); handleDirectSchedule(); }}>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label>Date & Time</Label>
+                                        <Input
+                                            type="datetime-local"
+                                            value={scheduleDateTime}
+                                            onChange={(e) => setScheduleDateTime(e.target.value)}
+                                            min={new Date().toISOString().slice(0, 16)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsConsultationDialogOpen(false)}>Cancel</Button>
-                                <Button onClick={handleDirectSchedule} disabled={isScheduling}>
-                                    {isScheduling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Schedule & Generate Link
-                                </Button>
-                            </DialogFooter>
+                                <DialogFooter>
+                                    <Button variant="outline" type="button" onClick={() => setIsConsultationDialogOpen(false)}>Cancel</Button>
+                                    <Button type="submit" disabled={isScheduling}>
+                                        {isScheduling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Schedule & Generate Link
+                                    </Button>
+                                </DialogFooter>
+                            </form>
                         </DialogContent>
                     </Dialog>
 
@@ -345,30 +349,12 @@ const CaseDetail = () => {
                                             </span>
                                         </div>
 
-                                        <div className="pt-2 space-y-3 px-2">
-                                            <div className="flex items-center gap-2">
-                                                <Label htmlFor="report-lang" className="text-xs text-muted-foreground">Report Language:</Label>
-                                                <select
-                                                    id="report-lang"
-                                                    value={selectedLang}
-                                                    onChange={(e) => setSelectedLang(e.target.value)}
-                                                    className="flex h-8 rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                >
-                                                    {LANGUAGES.map((lang) => (
-                                                        <option key={lang.code} value={lang.code}>{lang.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <Button asChild variant="outline" size="sm" className="w-full gap-2 text-indigo-700 border-indigo-200 hover:bg-indigo-50">
-                                                <a
-                                                    href={`http://127.0.0.1:8000/api/practitioner/tests/${caseDetail.id}/report/?lang=${selectedLang}`}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                >
-                                                    <FileText className="h-4 w-4" />
-                                                    View Diagnostic Report
-                                                </a>
-                                            </Button>
+                                        <div className="pt-2">
+                                            <ReportManager
+                                                testId={caseDetail.id}
+                                                initialLanguage={selectedLang}
+                                                reportUrl={caseDetail.report_pdf}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -468,42 +454,45 @@ const CaseDetail = () => {
                                     Verify AI results and provide your formal diagnosis.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Decision</Label>
-                                    <Select value={reviewDecision} onValueChange={setReviewDecision}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select decision" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="CONFIRM">Confirm AI Result</SelectItem>
-                                            <SelectItem value="OVERRIDE">Override / Correct Result</SelectItem>
-                                            <SelectItem value="MORE_TESTS">Recommend Further Testing</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Clinical Notes</Label>
-                                    <Textarea
-                                        placeholder="Add your observations, diagnosis, and recommendations here..."
-                                        className="min-h-[120px]"
-                                        value={reviewNotes}
-                                        onChange={(e) => setReviewNotes(e.target.value)}
-                                    />
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <Button className="w-full" onClick={handleReviewSubmit} disabled={isSubmitting}>
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Submitting...
-                                        </>
-                                    ) : (
-                                        "Submit Diagnosis"
-                                    )}
-                                </Button>
-                            </CardFooter>
+                            <form onSubmit={(e) => { e.preventDefault(); handleReviewSubmit(); }}>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label>Decision</Label>
+                                        <Select value={reviewDecision} onValueChange={setReviewDecision} required>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select decision" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="CONFIRM">Confirm AI Result</SelectItem>
+                                                <SelectItem value="OVERRIDE">Override / Correct Result</SelectItem>
+                                                <SelectItem value="MORE_TESTS">Recommend Further Testing</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Clinical Notes</Label>
+                                        <Textarea
+                                            placeholder="Add your observations, diagnosis, and recommendations here..."
+                                            className="min-h-[120px]"
+                                            value={reviewNotes}
+                                            onChange={(e) => setReviewNotes(e.target.value)}
+                                            required={reviewDecision === 'OVERRIDE'}
+                                        />
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <Button className="w-full" type="submit" disabled={isSubmitting}>
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Submitting...
+                                            </>
+                                        ) : (
+                                            "Submit Diagnosis"
+                                        )}
+                                    </Button>
+                                </CardFooter>
+                            </form>
                         </Card>
                     )}
 

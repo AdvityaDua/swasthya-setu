@@ -101,6 +101,9 @@ const PatientLookup = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-grow"
+                  pattern={searchBy === "phone" ? "[6-9][0-9]{9}" : undefined}
+                  title={searchBy === "phone" ? "Ten digit Indian mobile number" : "ABHA ID"}
+                  required
                 />
                 <Button type="button" variant="outline" onClick={() => setSearchBy(searchBy === "phone" ? "abha_id" : "phone")}>
                   Toggle to {searchBy === "phone" ? "ABHA ID" : "Phone"}

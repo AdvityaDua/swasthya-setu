@@ -50,11 +50,13 @@ class AIResultSerializer(serializers.ModelSerializer):
     def get_report_pdf(self, obj):
         request = self.context.get('request')
         try:
-            # Point to the dynamic download view instead of static file
-            url = f"/api/practitioner/tests/{obj.test.id}/report/"
-            if request:
-                return request.build_absolute_uri(url)
-            return url
+            # Find the actual report from DB
+            report = DiagnosticReport.objects.filter(test=obj.test).first()
+            if report and report.report_pdf:
+                if request:
+                    return request.build_absolute_uri(report.report_pdf.url)
+                return report.report_pdf.url
+            return None
         except Exception:
             return None
 

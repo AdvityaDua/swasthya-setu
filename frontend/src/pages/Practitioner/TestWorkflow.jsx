@@ -96,6 +96,12 @@ const TestWorkflow = () => {
       return;
     }
 
+    // 5MB limit
+    if (imageFile.size > 5 * 1024 * 1024) {
+      setErrorMessage("File size exceeds 5MB limit.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("image", imageFile);
 
@@ -284,75 +290,82 @@ const TestWorkflow = () => {
             <CardDescription>Provide symptoms and vital signs for context-aware AI analysis</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="symptoms">Symptoms & Clinical Notes</Label>
-              <textarea
-                id="symptoms"
-                placeholder="Describe patient symptoms, complaints, and clinical observations..."
-                value={symptoms}
-                onChange={(e) => setSymptoms(e.target.value)}
-                disabled={currentStep > 2}
-                className="w-full p-3 border rounded-md min-h-24 text-sm"
-              />
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleClinicalContextSubmit(); }}>
+              <div className="space-y-2">
+                <Label htmlFor="symptoms">Symptoms & Clinical Notes</Label>
+                <textarea
+                  id="symptoms"
+                  placeholder="Describe patient symptoms, complaints, and clinical observations..."
+                  value={symptoms}
+                  onChange={(e) => setSymptoms(e.target.value)}
+                  disabled={currentStep > 2}
+                  className="w-full p-3 border rounded-md min-h-24 text-sm"
+                  required
+                />
+              </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="bp">Blood Pressure (mmHg)</Label>
-                <Input
-                  id="bp"
-                  placeholder="e.g., 120/80"
-                  value={vitals.bp}
-                  onChange={(e) => setVitals({ ...vitals, bp: e.target.value })}
-                  disabled={currentStep > 2}
-                />
+              <div className="grid gap-4 md:grid-cols-3 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bp">Blood Pressure (mmHg)</Label>
+                  <Input
+                    id="bp"
+                    placeholder="e.g., 120/80"
+                    value={vitals.bp}
+                    onChange={(e) => setVitals({ ...vitals, bp: e.target.value })}
+                    disabled={currentStep > 2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="temp">Temperature (°C)</Label>
+                  <Input
+                    id="temp"
+                    placeholder="e.g., 37.5"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="50"
+                    value={vitals.temperature}
+                    onChange={(e) => setVitals({ ...vitals, temperature: e.target.value })}
+                    disabled={currentStep > 2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hr">Heart Rate (bpm)</Label>
+                  <Input
+                    id="hr"
+                    placeholder="e.g., 72"
+                    type="number"
+                    min="0"
+                    max="300"
+                    value={vitals.heart_rate}
+                    onChange={(e) => setVitals({ ...vitals, heart_rate: e.target.value })}
+                    disabled={currentStep > 2}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="temp">Temperature (°C)</Label>
-                <Input
-                  id="temp"
-                  placeholder="e.g., 37.5"
-                  type="number"
-                  step="0.1"
-                  value={vitals.temperature}
-                  onChange={(e) => setVitals({ ...vitals, temperature: e.target.value })}
-                  disabled={currentStep > 2}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="hr">Heart Rate (bpm)</Label>
-                <Input
-                  id="hr"
-                  placeholder="e.g., 72"
-                  type="number"
-                  value={vitals.heart_rate}
-                  onChange={(e) => setVitals({ ...vitals, heart_rate: e.target.value })}
-                  disabled={currentStep > 2}
-                />
-              </div>
-            </div>
 
-            {currentStep === 2 && (
-              <Button onClick={handleClinicalContextSubmit} disabled={addingContext} className="w-full">
-                {addingContext ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Activity className="mr-2 h-4 w-4" />
-                    Save Clinical Context
-                  </>
-                )}
-              </Button>
-            )}
-            {currentStep > 2 && (
-              <Badge className="bg-green-100 text-green-800">
-                <CheckCircle2 className="mr-2 h-3 w-3" />
-                Completed
-              </Badge>
-            )}
+              {currentStep === 2 && (
+                <Button type="submit" disabled={addingContext} className="w-full mt-4">
+                  {addingContext ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Activity className="mr-2 h-4 w-4" />
+                      Save Clinical Context
+                    </>
+                  )}
+                </Button>
+              )}
+              {currentStep > 2 && (
+                <Badge className="bg-green-100 text-green-800 mt-4">
+                  <CheckCircle2 className="mr-2 h-3 w-3" />
+                  Completed
+                </Badge>
+              )}
+            </form>
           </CardContent>
         </Card>
       )}
@@ -458,7 +471,7 @@ const TestWorkflow = () => {
                       <ReportManager
                         testId={test_id}
                         initialLanguage={selectedLang}
-                        reportUrl={aiResult.report_url}
+                        reportUrl={aiResult.report_pdf}
                       />
                     </div>
                   );
@@ -491,67 +504,70 @@ const TestWorkflow = () => {
             <CardDescription>Submit referral with AI results for doctor review</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="doctor-select">Select Doctor</Label>
-              <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                <SelectTrigger id="doctor-select">
-                  <SelectValue placeholder={doctorsLoading ? "Loading doctors..." : "Choose a doctor..."} />
-                </SelectTrigger>
-                <SelectContent>
-                  {doctorsLoading ? (
-                    <SelectItem disabled value="loading_doctors">Loading...</SelectItem>
-                  ) : doctorsList && doctorsList.length > 0 ? (
-                    doctorsList.map((doctor) => (
-                      <SelectItem key={doctor.doctor_id} value={doctor.doctor_id}>
-                        Dr. {doctor.name} - {doctor.specialization}
-                      </SelectItem>
-                    ))
+            <form onSubmit={(e) => { e.preventDefault(); handleReferToDoctor(); }}>
+              <div className="space-y-2">
+                <Label htmlFor="doctor-select">Select Doctor</Label>
+                <Select value={selectedDoctor} onValueChange={setSelectedDoctor} required>
+                  <SelectTrigger id="doctor-select">
+                    <SelectValue placeholder={doctorsLoading ? "Loading doctors..." : "Choose a doctor..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctorsLoading ? (
+                      <SelectItem disabled value="loading_doctors">Loading...</SelectItem>
+                    ) : doctorsList && doctorsList.length > 0 ? (
+                      doctorsList.map((doctor) => (
+                        <SelectItem key={doctor.doctor_id} value={doctor.doctor_id}>
+                          Dr. {doctor.name} - {doctor.specialization}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem disabled value="no_doctors_available">No doctors available</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="urgency-select">Urgency Level</Label>
+                <Select value={urgency} onValueChange={setUrgency}>
+                  <SelectTrigger id="urgency-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ROUTINE">Routine</SelectItem>
+                    <SelectItem value="HIGH">High (Urgent)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="reason">Referral Reason</Label>
+                <textarea
+                  id="reason"
+                  placeholder="Explain why you're referring this case to the doctor..."
+                  value={referralReason}
+                  onChange={(e) => setReferralReason(e.target.value)}
+                  className="w-full p-3 border rounded-md min-h-20 text-sm"
+                  required
+                />
+              </div>
+
+              {currentStep === 4 && (
+                <Button type="submit" disabled={referringDoctor || !selectedDoctor} className="w-full">
+                  {referringDoctor ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
                   ) : (
-                    <SelectItem disabled value="no_doctors_available">No doctors available</SelectItem>
+                    <>
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Submit Referral
+                    </>
                   )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="urgency-select">Urgency Level</Label>
-              <Select value={urgency} onValueChange={setUrgency}>
-                <SelectTrigger id="urgency-select">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ROUTINE">Routine</SelectItem>
-                  <SelectItem value="HIGH">High (Urgent)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="reason">Referral Reason</Label>
-              <textarea
-                id="reason"
-                placeholder="Explain why you're referring this case to the doctor..."
-                value={referralReason}
-                onChange={(e) => setReferralReason(e.target.value)}
-                className="w-full p-3 border rounded-md min-h-20 text-sm"
-              />
-            </div>
-
-            {currentStep === 4 && (
-              <Button onClick={handleReferToDoctor} disabled={referringDoctor || !selectedDoctor} className="w-full">
-                {referringDoctor ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Submit Referral
-                  </>
-                )}
-              </Button>
-            )}
+                </Button>
+              )}
+            </form>
           </CardContent>
         </Card>
       )}

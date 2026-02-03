@@ -475,7 +475,7 @@ class ConsultationRequestCreateSerializer(serializers.ModelSerializer):
         ).exists()
         
         if existing:
-            raise serializers.ValidationError("You already have an active consultation request with this doctor")
+            raise serializers.ValidationError({"detail": "You already have an active consultation request with this doctor"})
         
         consultation = ConsultationRequest.objects.create(
             patient=patient,

@@ -136,6 +136,7 @@ const Profile = () => {
                   value={designation}
                   onChange={(e) => setDesignation(e.target.value)}
                   placeholder="e.g. Lab Technician, Radiologist"
+                  required
                 />
               </div>
               <div className="grid gap-2">
@@ -147,6 +148,7 @@ const Profile = () => {
                   value={experienceYears}
                   onChange={(e) => setExperienceYears(e.target.value)}
                   placeholder="e.g. 5"
+                  required
                 />
               </div>
             </div>
@@ -158,6 +160,7 @@ const Profile = () => {
                 value={diagnosticCenterName}
                 onChange={(e) => setDiagnosticCenterName(e.target.value)}
                 placeholder="e.g. City Diagnostic Lab"
+                required
               />
             </div>
 
@@ -168,6 +171,7 @@ const Profile = () => {
                 value={centerLocation}
                 onChange={(e) => setCenterLocation(e.target.value)}
                 placeholder="Address or area of the center"
+                required
               />
             </div>
 

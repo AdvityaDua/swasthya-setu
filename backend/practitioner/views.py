@@ -163,12 +163,14 @@ class ClinicalContextCreateView(APIView):
             "medical_history": patient.medical_history,
         }
 
-        ClinicalContext.objects.create(
+        ClinicalContext.objects.update_or_create(
             test=test,
-            symptoms=serializer.validated_data["symptoms"],
-            vitals=serializer.validated_data.get("vitals"),
-            auto_history_snapshot=history_snapshot,
-            entered_by=request.user
+            defaults={
+                "symptoms": serializer.validated_data["symptoms"],
+                "vitals": serializer.validated_data.get("vitals"),
+                "auto_history_snapshot": history_snapshot,
+                "entered_by": request.user
+            }
         )
 
         return Response({"message": "Clinical context saved"})

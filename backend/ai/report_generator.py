@@ -27,36 +27,43 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
     # Initialize Bhashini for translation if target_lang is not English
     bhashini = BhashiniService() if target_lang != "en" else None
 
-    # Default Labels
+    # Default Labels (Simplified for better translation stability)
     labels = {
-        "title": "Clinical Diagnostic Report (AI-Assisted)",
-        "subtitle": "Generated using AI-assisted clinical decision support",
-        "intro_summary": "The AI system suggests a {risk_level}-risk finding of '{prediction}'. This assessment should be interpreted in conjunction with clinical symptoms, recorded vitals, patient history, and the final judgment of a qualified medical professional.",
-        "exec_summary_title": "Executive Clinical Summary",
+        "title": "Diagnostic Report (AI)",
+        "subtitle": "AI-Assisted Analysis",
+        "summary_point_1": "Finding: {prediction}",
+        "summary_point_2": "Risk Assessment: {risk_level}",
+        "summary_point_3": "Recommendation: Consult a doctor for clinical diagnosis.",
+        "exec_summary_title": "Clinical Summary",
         "patient_info": "Patient Information",
         "patient_name_label": "Patient Name:",
         "report_date_label": "Report Date:",
         "report_id_label": "Report ID:",
         "test_type_label": "Test Type:",
         "status_label": "Status:",
-        "ai_results": "AI Analysis (Assistive)",
-        "ai_finding_label": "AI-Suggested Finding:",
-        "ai_risk_label": "AI Risk Stratification:",
-        "model_confidence_label": "Model Confidence:",
-        "ai_note": "Note: AI outputs are probabilistic and intended to assist—not replace—clinical decision-making.",
+        "ai_results": "AI Analysis",
+        "ai_finding_label": "Finding:",
+        "ai_risk_label": "Risk Level:",
+        "model_confidence_label": "AI Confidence:",
+        "ai_note": "Note: AI is assistive only. Doctor review required.",
         "clinical_context": "Clinical Context",
-        "symptoms_label": "Reported Symptoms:",
-        "vitals_label": "Recorded Vitals:",
-        "history_label": "Patient Health History Snapshot",
-        "doctor_review": "Doctor’s Final Clinical Review",
-        "doctor_review_note": "This section represents the final medical decision by a qualified healthcare professional.",
-        "reviewing_doctor_label": "Reviewing Doctor:",
-        "clinical_decision_label": "Clinical Decision:",
-        "doctor_notes_label": "Doctor’s Notes:",
-        "disclaimer": "Disclaimer: AI outputs are assistive and must be reviewed by a qualified medical professional.",
-        "generated_on": "Generated on:",
-        "heatmap_title": "Grad-CAM Heatmap Visualization",
-        "heatmap_desc": "Highlighted regions indicate areas influencing the AI model's prediction. This is not a definitive diagnosis."
+        "symptoms_label": "Symptoms:",
+        "vitals_label": "Vitals:",
+        "history_label": "History Snapshot",
+        "doctor_review": "Doctor's Review",
+        "doctor_review_note": "Final decision by doctor.",
+        "reviewing_doctor_label": "Doctor:",
+        "clinical_decision_label": "Decision:",
+        "doctor_notes_label": "Notes:",
+        "disclaimer": "Disclaimer: AI is assistive. Medical review required.",
+        "generated_on": "Generated:",
+        "heatmap_title": "Heatmap",
+        "heatmap_desc": "Highlighted areas influence the AI prediction.",
+        "dob_label": "DOB:",
+        "mobile_label": "Mobile:",
+        "abha_label": "ABHA:",
+        "blood_group_label": "Blood Group:",
+        "address_label": "Address:"
     }
 
     dynamic_content = {
@@ -66,15 +73,14 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         "confidence_val": f"{ai_result.confidence * 100:.1f}%"
     }
     
-    # Pre-format summary text for translation
-    summary_text = labels["intro_summary"].format(
-        risk_level=dynamic_content["risk_level_val"],
-        prediction=dynamic_content["prediction"]
-    )
+    # Pre-format summary points for translation
+    p1 = labels["summary_point_1"].format(prediction=dynamic_content["prediction"])
+    p2 = labels["summary_point_2"].format(risk_level=dynamic_content["risk_level_display"])
+    p3 = labels["summary_point_3"]
     
-    # If translating, we need to translate the summary text as a whole
-    # So we replace the template in labels with the formatted string for translation
-    labels["intro_summary_formatted"] = summary_text
+    labels["summary_point_1_fmt"] = p1
+    labels["summary_point_2_fmt"] = p2
+    labels["summary_point_3_fmt"] = p3
 
     if clinical_context:
         dynamic_content["symptoms"] = clinical_context.symptoms if isinstance(clinical_context.symptoms, list) else [str(clinical_context.symptoms)]
@@ -155,7 +161,7 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         except Exception as e:
             print(f"Font registration failed: {e}")
 
-    # ================= HELPERS =================
+    # ================= HELPERS (Improved) =================
     def draw_section_header(text, y):
         c.setFillColor(SOFT_GRAY)
         c.roundRect(40, y - 22, width - 80, 26, 8, fill=1, stroke=0)
@@ -165,7 +171,9 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         return y - 40
 
     def wrap_text(text, max_width, font=font_name, size=11):
-        words = text.split(" ")
+        if not text:
+            return [""]
+        words = str(text).split(" ")
         lines, current = [], ""
         for w in words:
             test_line = current + w + " "
@@ -177,116 +185,129 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         lines.append(current)
         return lines
 
+    def draw_footer():
+        footer_y = 50
+        c.setStrokeColor(SOFT_GRAY)
+        c.line(40, footer_y + 25, width - 40, footer_y + 25)
+
+        c.setFont(font_name, 9)
+        c.setFillColor(TEXT_DARK)
+        # Disclaimer Left (Keep at y=60)
+        c.drawString(40, footer_y + 10, labels["disclaimer"])
+        
+        # Center Branding
+        c.setFont(font_bold, 12)
+        c.setFillColor(PRIMARY_BLUE)
+        c.drawCentredString(width / 2, 25, "Swasthya Setu")
+        c.setFont(font_name, 9)
+        c.drawCentredString(width / 2, 12, "AI for Accessible & Responsible Healthcare")
+
+        # Generated On Bottom Right (Align with bottom text at y=12)
+        c.setFont(font_name, 8)
+        c.setFillColor(TEXT_DARK)
+        c.drawRightString(width - 40, 12, f"{labels['generated_on']} {datetime.now().strftime('%d %b %Y, %H:%M')}")
+
     def ensure_space(required=40):
         nonlocal y
-        if y - required < FOOTER_HEIGHT:
+        if y - required < FOOTER_HEIGHT + 20:
+            draw_footer()
             c.showPage()
             y = height - 50
 
-    # ================= TITLE =================
+    def draw_field(label, value, x_label, x_value, current_y, max_w=300):
+        # Calculate label height (usually 1 line)
+        c.setFont(font_bold, 11)
+        c.setFillColor(TEXT_DARK)
+        c.drawString(x_label, current_y, label)
+
+        # Wrap and draw value
+        c.setFont(font_name, 11)
+        # Ensure value is string
+        val_str = str(value) if value is not None else "-"
+        lines = wrap_text(val_str, max_w, font_name, 11)
+        
+        dy = current_y
+        for line in lines:
+            c.drawString(x_value, dy, line)
+            dy -= 14
+        
+        # Return new Y (accounting for at least 1 line height or multiple)
+        return min(current_y - 20, dy - 6)
+
+    # ================= HEADER & LOGO =================
+    logo_path = os.path.join(os.path.dirname(__file__), "logo.jpeg")
+    
+    # Logo Configuration
+    logo_width = 200
+    logo_height = 100
+    logo_x = (width - logo_width) / 2
+    
+    # Minimal top margin (5 units from top edge)
+    logo_y = height - logo_height - 5
+    
+    if os.path.exists(logo_path):
+        try:
+             c.drawImage(logo_path, logo_x, logo_y, width=logo_width, height=logo_height, preserveAspectRatio=True, mask='auto')
+        except Exception as e:
+             print(f"Error loading logo: {e}")
+             # Fallback to drawn cross centered
+             cx = width / 2
+             cy = logo_y + logo_height / 2
+             c.setFillColor(HexColor("#E63946"))
+             c.roundRect(cx - 40, cy - 40, 80, 80, 12, fill=1, stroke=0)
+             c.setFillColor(HexColor("#FFFFFF"))
+             c.rect(cx - 10, cy - 20, 20, 40, fill=1, stroke=0)
+             c.rect(cx - 20, cy - 10, 40, 20, fill=1, stroke=0)
+    else:
+        # Fallback centered
+        cx = width / 2
+        cy = logo_y + logo_height / 2
+        c.setFillColor(HexColor("#E63946"))
+        c.roundRect(cx - 40, cy - 40, 80, 80, 12, fill=1, stroke=0)
+        c.setFillColor(HexColor("#FFFFFF"))
+        c.rect(cx - 10, cy - 20, 20, 40, fill=1, stroke=0)
+        c.rect(cx - 20, cy - 10, 40, 20, fill=1, stroke=0)
+
+    # Move y down below logo for title (Minimal spacing)
+    y = logo_y - 10
+
+    # Title centered
     c.setFont(font_bold, 22)
     c.setFillColor(PRIMARY_BLUE)
     c.drawCentredString(width / 2, y, labels["title"])
+    
+    y -= 20
 
     c.setFont(font_name, 11)
     c.setFillColor(TEXT_DARK)
-    c.drawCentredString(
-        width / 2, y - 24,
-        labels["subtitle"]
-    )
+    c.drawCentredString(width / 2, y, labels["subtitle"])
 
     c.setStrokeColor(ACCENT_TEAL)
     c.setLineWidth(1.5)
-    c.line(50, y - 38, width - 50, y - 38)
-    y -= 70
-
-    # ================= EXECUTIVE SUMMARY =================
-    # Use formatted/translated summary text
-    summary_text = labels.get("intro_summary_formatted", labels["intro_summary"])
-
-    wrapped = wrap_text(summary_text, width - 110, font=font_name, size=11)
-    box_height = 35 + len(wrapped) * 14
-
-    ensure_space(box_height + 20)
-
-    c.setFillColor(SOFT_GRAY)
-    c.roundRect(40, y - box_height, width - 80, box_height, 10, fill=1, stroke=0)
-
-    c.setFont(font_bold, 13)
-    c.setFillColor(PRIMARY_BLUE)
-    c.drawString(55, y - 20, labels["exec_summary_title"])
-
-    text = c.beginText(55, y - 40)
-    text.setFont(font_name, 11)
-    text.setFillColor(TEXT_DARK)
-    for line in wrapped:
-        text.textLine(line)
-    c.drawText(text)
-
-    y -= box_height + 25
+    c.line(40, y - 10, width - 40, y - 10)
+    y -= 35
 
     # ================= PATIENT INFO =================
     y = draw_section_header(labels["patient_info"], y)
 
-    c.setFont(font_name, 11)
-    c.setFillColor(TEXT_DARK)
-    c.drawString(60, y, labels["patient_name_label"])
-    c.setFont(font_bold, 11)
-    c.drawString(170, y, test.patient.user.full_name)
+    # Column 1
+    start_y = y
+    y = draw_field(labels["patient_name_label"], test.patient.user.full_name, 60, 160, y, max_w=180)
+    y = draw_field(labels["dob_label"], test.patient.date_of_birth or "N/A", 60, 160, y, max_w=180)
+    y = draw_field(labels["mobile_label"], test.patient.user.phone, 60, 160, y, max_w=180)
+    
+    # Column 2 (Reset Y)
+    col2_y = start_y
+    col2_y = draw_field(labels["report_date_label"], test.test_date.strftime("%d %b %Y"), 320, 420, col2_y, max_w=150)
+    col2_y = draw_field(labels["abha_label"], test.patient.user.abha_id or "N/A", 320, 420, col2_y, max_w=150)
+    col2_y = draw_field(labels["blood_group_label"], test.patient.blood_group or "N/A", 320, 420, col2_y, max_w=150)
+    
+    # Use lowest Y
+    y = min(y, col2_y)
 
-    c.setFont(font_name, 11)
-    c.drawString(350, y, labels["report_date_label"])
-    c.setFont(font_bold, 11)
-    c.drawString(440, y, test.test_date.strftime("%d %b %Y"))
-    y -= 18
-
-    c.setFont(font_name, 10)
-    c.drawString(60, y, f"{labels['report_id_label']} {test.id}")
-    c.drawString(350, y, f"{labels['test_type_label']} {test.get_test_type_display()}")
-    y -= 30
-
-    # ================= AI ANALYSIS =================
-    y = draw_section_header(labels["ai_results"], y)
-
-    c.setFont(font_bold, 11)
-    c.drawString(60, y, labels["ai_finding_label"])
-    c.setFont(font_name, 11)
-    c.drawString(300, y, dynamic_content["prediction"])
-    y -= 20
-
-    c.setFont(font_bold, 11)
-    c.drawString(60, y, labels["ai_risk_label"])
-    c.setFont(font_name, 11)
-    c.drawString(300, y, dynamic_content["risk_level_display"])
-
-    badge_color = WARNING_RED if ai_result.risk_level.lower() == "high" else ACCENT_TEAL
-    c.setFillColor(badge_color)
-    c.roundRect(470, y - 12, 60, 16, 6, fill=1, stroke=0)
-    c.setFillColor(HexColor("#FFFFFF"))
-    c.setFont(font_bold, 9)
-    # Center text in badge
-    risk_text = dynamic_content["risk_level_display"].upper()
-    text_width = c.stringWidth(risk_text, font_bold, 9)
-    c.drawString(470 + (60 - text_width) / 2, y - 8, risk_text)
-    y -= 30
-
-    confidence_pct = ai_result.confidence * 100
-    c.setFont(font_bold, 11)
-    c.setFillColor(TEXT_DARK)
-    c.drawString(60, y, labels["model_confidence_label"])
-    c.setFont(font_name, 11)
-    c.drawString(300, y, f"{confidence_pct:.1f}%")
-    y -= 12
-
-    c.setFillColor(SOFT_GRAY)
-    c.rect(300, y, 200, 8, fill=1, stroke=0)
-    c.setFillColor(ACCENT_TEAL)
-    c.rect(300, y, 2 * confidence_pct, 8, fill=1, stroke=0)
-    y -= 25
-
-    c.setFont(font_oblique, 9)
-    c.drawString(60, y, labels["ai_note"])
-    y -= 25
+    # Full width address
+    y = draw_field(labels["address_label"], test.patient.address or "N/A", 60, 160, y, max_w=380)
+    y -= 15
 
     # ================= CLINICAL CONTEXT =================
     if clinical_context:
@@ -295,113 +316,261 @@ def generate_report(test, ai_result, clinical_context=None, target_lang="en"):
         if dynamic_content.get("symptoms"):
             c.setFont(font_bold, 11)
             c.drawString(60, y, labels["symptoms_label"])
-            c.setFont(font_name, 10)
-            sy = y - 16
+            y -= 15
             for s in dynamic_content["symptoms"]:
-                c.drawString(70, sy, f"• {s}")
-                sy -= 14
-            y = sy - 10 # Update y
+                y = draw_field("•", s, 70, 85, y, max_w=450)
+            y -= 5
 
         if clinical_context.vitals:
             c.setFont(font_bold, 11)
-            c.drawString(350, y + 26 if dynamic_content.get("symptoms") else y, labels["vitals_label"])
-            c.setFont(font_name, 10)
-            vy = y + 10 if dynamic_content.get("symptoms") else y - 16
-            for k, v in clinical_context.vitals.items():
-                c.drawString(360, vy, f"{k}: {v}")
-                vy -= 14
-            # Update y based on lowest point
-            y = min(y, vy) - 20
+            c.drawString(60, y, labels["vitals_label"])
+            y -= 15
+            
+            # Grid layout for vitals
+            vitals_items = list(clinical_context.vitals.items())
+            for i in range(0, len(vitals_items), 2):
+                # Item 1
+                k1, v1 = vitals_items[i]
+                y1 = draw_field(f"{k1}:", v1, 70, 180, y, max_w=100)
+                
+                # Item 2
+                y2 = y
+                if i + 1 < len(vitals_items):
+                    k2, v2 = vitals_items[i+1]
+                    y2 = draw_field(f"{k2}:", v2, 320, 430, y, max_w=100)
+                
+                y = min(y1, y2)
+    
+    y -= 10
+
+    # ================= AI ANALYSIS (Split Layout) =================
+    ensure_space(250)
+    y = draw_section_header(labels["ai_results"], y)
+    
+    # Define Split Zones
+    # Left Box (Heatmap): x=50, w=200, h=200
+    # Center Y of the block relative to current y
+    block_height = 200
+    block_center_y = y - (block_height / 2)
+    
+    # --- Left: Heatmap ---
+    # Box Top: y, Bottom: y-200
+    c.setStrokeColor(SOFT_GRAY)
+    c.setLineWidth(1)
+    c.roundRect(50, y - block_height, 200, block_height, 8, stroke=1, fill=0)
+    
+    heatmap_drawn = False
+    if ai_result.heatmap_image:
+        try:
+             # Handle remote storage (R2/S3)
+            heatmap_file = ai_result.heatmap_image
+            import tempfile
+            
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_heatmap:
+                if hasattr(heatmap_file, 'open'):
+                    heatmap_file.open('rb')
+                tmp_heatmap.write(heatmap_file.read())
+                tmp_heatmap_path = tmp_heatmap.name
+                if hasattr(heatmap_file, 'close'):
+                    heatmap_file.close()
+
+            if tmp_heatmap_path and os.path.exists(tmp_heatmap_path):
+                 # Draw image inside box
+                 c.drawImage(tmp_heatmap_path, 51, y - block_height + 1, width=198, height=198, preserveAspectRatio=True)
+                 heatmap_drawn = True
+                 try:
+                     os.remove(tmp_heatmap_path)
+                 except:
+                     pass
+        except Exception as e:
+            print(f"Error drawing heatmap in split view: {e}")
+            pass
+            
+    if not heatmap_drawn:
+        c.setFont(font_name, 10)
+        c.setFillColor(HexColor("#999999"))
+        c.drawCentredString(150, block_center_y, "No Heatmap Available")
+        
+    # Heatmap Header/Label below the box
+    c.setFont(font_bold, 10)
+    c.setFillColor(TEXT_DARK)
+    c.drawCentredString(150, y - block_height - 15, labels.get("heatmap_title", "Grad-CAM Heatmap"))
+
+    # --- Right: Stats (Vertically Centered) ---
+    # 1. Calculate height of right content to determine Start Y
+    # Fonts
+    f_finding = 11
+    f_risk = 11
+    f_conf = 11
+    f_note = 9
+    
+    # Simulate drawing to get height
+    # Finding
+    finding_lines = wrap_text(dynamic_content["prediction"], 280, font_name, f_finding)
+    h_finding = len(finding_lines) * 14
+    
+    # Risk Badge (Label + Badge + Padding)
+    h_risk = 14 + 16 + 10 # roughly 40
+    
+    # Confidence (Label + Bar + Padding)
+    h_conf = 14 + 8 + 10 # roughly 32
+    
+    # Note
+    note_lines = wrap_text(labels["ai_note"], 260, font_oblique, f_note)
+    h_note = len(note_lines) * 12
+    
+    total_right_height = h_finding + h_risk + h_conf + h_note + 20 # 20 padding
+    
+    # Start Y for Right Content such that its center aligns with block_center_y
+    # Top of right content = block_center_y + (total_right_height / 2)
+    right_start_y = block_center_y + (total_right_height / 2)
+    
+    current_y = right_start_y
+    
+    # Draw Finding
+    c.setFont(font_name, f_finding)
+    for line in finding_lines:
+        c.drawString(270, current_y, line)
+        current_y -= 14
+    
+    current_y -= 10
+    
+    # Risk Badge
+    c.setFont(font_bold, f_risk)
+    c.setFillColor(TEXT_DARK)
+    c.drawString(270, current_y, labels["ai_risk_label"])
+    
+    badge_color = WARNING_RED if ai_result.risk_level.lower() == "high" else ACCENT_TEAL
+    c.setFillColor(badge_color)
+    c.roundRect(410, current_y - 2, 80, 16, 6, fill=1, stroke=0)
+    c.setFillColor(HexColor("#FFFFFF"))
+    c.setFont(font_bold, 9)
+    risk_text = dynamic_content["risk_level_display"].upper()
+    c.drawCentredString(450, current_y + 2, risk_text)
+    current_y -= 25
+
+    # Confidence Bar
+    c.setFont(font_bold, f_conf)
+    c.setFillColor(TEXT_DARK)
+    c.drawString(270, current_y, labels["model_confidence_label"])
+    c.setFont(font_name, f_conf)
+    
+    conf_pct = ai_result.confidence * 100
+    c.drawString(410, current_y, f"{conf_pct:.1f}%")
+    
+    c.setFillColor(SOFT_GRAY)
+    c.rect(410, current_y - 10, 120, 6, fill=1, stroke=0)
+    c.setFillColor(ACCENT_TEAL)
+    c.rect(410, current_y - 10, 1.2 * (conf_pct), 6, fill=1, stroke=0)
+    current_y -= 25
+    
+    # Note
+    c.setFont(font_oblique, f_note)
+    c.setFillColor(TEXT_DARK)
+    for line in note_lines:
+        c.drawString(270, current_y, line)
+        current_y -= 12
+
+    # Move main Y below the entire block (200 height + label space + margin)
+    y -= (block_height + 40)
+
+    # ================= EXECUTIVE SUMMARY (Bullet Points) =================
+    ensure_space(100)
+    
+    # Gather points (Translated if needed)
+    sp1 = labels.get("summary_point_1_fmt", labels["summary_point_1"]).format(prediction=dynamic_content["prediction"])
+    sp2 = labels.get("summary_point_2_fmt", labels["summary_point_2"]).format(risk_level=dynamic_content["risk_level_display"])
+    sp3 = labels.get("summary_point_3_fmt", labels["summary_point_3"])
+    
+    summary_points = [sp1, sp2, sp3]
+    
+    # Calculate box height based on points
+    # Avg 1-2 lines per point
+    pts_height = 0
+    formatted_points = []
+    for p in summary_points:
+        lines = wrap_text(p, width - 130, font_name, 11)
+        formatted_points.append(lines)
+        pts_height += len(lines) * 14 + 6 # 6 padding per point
+        
+    box_height = 20 + pts_height
+    ensure_space(box_height + 40)
+
+    # Label on top
+    c.setFont(font_bold, 13)
+    c.setFillColor(PRIMARY_BLUE)
+    c.drawString(55, y, labels["exec_summary_title"])
+    y -= 10
+    
+    # Box below label
+    c.setFillColor(SOFT_GRAY)
+    c.roundRect(40, y - box_height, width - 80, box_height, 10, fill=1, stroke=0)
+    
+    # Draw Points
+    current_y = y - 25
+    for i, p_lines in enumerate(formatted_points):
+        # Bullet
+        c.setFont(font_bold, 16)
+        c.setFillColor(PRIMARY_BLUE)
+        c.drawString(55, current_y - 2, "•")
+        
+        # Text
+        c.setFont(font_name, 11)
+        c.setFillColor(TEXT_DARK)
+        dy = current_y
+        for line in p_lines:
+            c.drawString(75, dy, line)
+            dy -= 14
+            
+        current_y = dy - 6
+
+    y -= box_height + 25
 
     # ================= DOCTOR REVIEW =================
     ensure_space(140)
+    y = draw_section_header(labels["doctor_review"], y)
     
+    c.setFont(font_name, 10)
+    c.setFillColor(TEXT_DARK)
+    c.drawString(60, y, labels["doctor_review_note"])
+    y -= 25
+
     try:
         referral = getattr(test, 'referral', None)
         doctor_review = getattr(referral, 'doctor_review', None) if referral else None
         
         if doctor_review:
-            y = draw_section_header(labels["doctor_review"], y)
-
-            c.setFont(font_name, 10)
-            c.drawString(60, y, labels["doctor_review_note"])
-            y -= 25
-
-            def draw_line(label, val, y_pos):
-                c.setFont(font_bold, 11)
-                c.drawString(60, y_pos, label)
-                c.setFont(font_name, 11)
-                c.drawString(220, y_pos, val)
-                c.setStrokeColor(SOFT_GRAY)
-                c.line(60, y_pos - 5, width - 60, y_pos - 5)
-                return y_pos - 20
-
-            y = draw_line(labels["reviewing_doctor_label"], f"Dr. {doctor_review.doctor.user.full_name}", y)
-            y = draw_line(labels["clinical_decision_label"], doctor_review.get_decision_display(), y)
+            y = draw_field(labels["reviewing_doctor_label"], f"Dr. {doctor_review.doctor.user.full_name}", 60, 220, y)
+            y = draw_field(labels["clinical_decision_label"], doctor_review.get_decision_display(), 60, 220, y)
             
             if doctor_review.notes:
                 notes_text = doctor_review.notes
-                # Translate notes if needed
+                # Quick translate if needed
                 if bhashini and target_lang != "en":
                     try:
                         notes_text = bhashini.translate_batch([notes_text], target_lang)[0]
                     except:
                         pass
                 
-                c.setFont(font_bold, 11)
-                c.drawString(60, y, labels["doctor_notes_label"])
-                y -= 15
-                c.setFont(font_name, 10)
-                wrapped_notes = wrap_text(notes_text, width - 120, font=font_name, size=10)
-                for line in wrapped_notes:
-                    c.drawString(70, y, line)
-                    y -= 12
-                y -= 20
+                y = draw_field(labels["doctor_notes_label"], notes_text, 60, 220, y, max_w=300)
+        else:
+            # Pending Status
+            c.setFillColor(HexColor("#FFF3E0")) # Light Orange/Yellow
+            c.roundRect(60, y - 30, width - 120, 30, 6, fill=1, stroke=0)
+            c.setFillColor(HexColor("#FF9800")) # Darker Orange text
+            c.setFont(font_bold, 11)
+            c.drawCentredString(width / 2, y - 20, "Doctor's Review Pending")
+            y -= 40
+            
     except Exception:
         pass
 
-    # ================= FOOTER =================
-    footer_y = 70
-
-    c.setFont(font_name, 9)
-    c.setFillColor(TEXT_DARK)
-    c.drawString(50, footer_y, labels["disclaimer"])
-
-    c.drawRightString(
-        width - 50, footer_y + 14,
-        f"{labels['generated_on']} {datetime.now().strftime('%d %b %Y, %H:%M')}"
-    )
-
-    c.setFont(font_bold, 12)
-    c.setFillColor(PRIMARY_BLUE)
-    c.drawCentredString(width / 2, 35, "Swasthya Setu")
-
-    c.setFont(font_name, 9)
-    c.drawCentredString(width / 2, 22, "AI for Accessible & Responsible Healthcare")
-
-    # ================= HEATMAP PAGE =================
-    if ai_result.heatmap_image:
-        c.showPage()
-        try:
-            heatmap_path = ai_result.heatmap_image.path
-            if heatmap_path and os.path.exists(heatmap_path):
-                c.setFont(font_bold, 14)
-                c.setFillColor(PRIMARY_BLUE)
-                c.drawString(50, height - 50, labels["heatmap_title"])
-
-                c.setFont(font_name, 10)
-                c.setFillColor(TEXT_DARK)
-                c.drawString(50, height - 80, labels["heatmap_desc"])
-
-                c.drawImage(heatmap_path, 50, height - 500, width=500, preserveAspectRatio=True)
-        except Exception:
-            pass
+    # ================= FOOTER (Final Page) =================
+    draw_footer()
 
     c.save()
-
     with open(path, "rb") as f:
         pdf_name = f"report_{test.id}_{target_lang}.pdf"
         pdf = ContentFile(f.read(), name=pdf_name)
-
     os.remove(path)
     return pdf

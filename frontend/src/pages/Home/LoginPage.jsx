@@ -109,6 +109,8 @@ const LoginPage = () => {
                   type="text"
                   placeholder="e.g., 9876543210"
                   required
+                  pattern="[6-9][0-9]{9}"
+                  title="Ten digit Indian mobile number starting with 6-9"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -119,6 +121,7 @@ const LoginPage = () => {
                   id="password"
                   type="password"
                   required
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />

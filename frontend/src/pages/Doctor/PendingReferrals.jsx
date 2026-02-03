@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 import { Loader2, AlertCircle, FileText, Calendar, Clock, User, ArrowRight, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { EmptyState } from "../../components/ui/empty-state";
 
 const PendingReferrals = () => {
     const { data: referrals = [], isLoading, error } = useGetDoctorReferralsQuery();
@@ -70,15 +71,11 @@ const PendingReferrals = () => {
                 </CardHeader>
                 <CardContent>
                     {referrals.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-dashed">
-                            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                                <FileText className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <h3 className="text-lg font-semibold">No pending referrals</h3>
-                            <p className="text-muted-foreground max-w-sm mt-1">
-                                Great job! You have cleared your referral queue.
-                            </p>
-                        </div>
+                        <EmptyState
+                            title="No pending referrals"
+                            description="Great job! You have cleared your referral queue."
+                            icon={FileText}
+                        />
                     ) : (
                         <div className="overflow-x-auto rounded-lg border bg-background">
                             <Table>

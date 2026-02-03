@@ -46,21 +46,21 @@ export default function MedicalHistory() {
     setConditions(
       Array.isArray(data.conditions)
         ? data.conditions.map((c) => ({
-            id: c.id || "",
-            name: c.name || "",
-            status: c.status || "ACTIVE",
-            diagnosed_date: c.diagnosed_date || "",
-            resolved_date: c.resolved_date || "",
-            notes: c.notes || "",
-          }))
+          id: c.id || "",
+          name: c.name || "",
+          status: c.status || "ACTIVE",
+          diagnosed_date: c.diagnosed_date || "",
+          resolved_date: c.resolved_date || "",
+          notes: c.notes || "",
+        }))
         : [],
     );
     setSurgeries(
       Array.isArray(data.surgeries)
         ? data.surgeries.map((s) => ({
-            procedure: s.procedure || "",
-            date: s.date || "",
-          }))
+          procedure: s.procedure || "",
+          date: s.date || "",
+        }))
         : [],
     );
   }, [data]);
@@ -143,7 +143,7 @@ export default function MedicalHistory() {
             {Array.isArray(updateError?.data)
               ? updateError.data[0]
               : updateError?.data?.detail ||
-                "Failed to update medical history."}
+              "Failed to update medical history."}
           </AlertDescription>
         </Alert>
       )}
@@ -193,6 +193,7 @@ export default function MedicalHistory() {
                   <Input
                     type="date"
                     placeholder="Diagnosed date"
+                    max={new Date().toISOString().split("T")[0]}
                     value={c.diagnosed_date}
                     onChange={(e) =>
                       setCondition(i, "diagnosed_date", e.target.value)
@@ -202,6 +203,7 @@ export default function MedicalHistory() {
                   <Input
                     type="date"
                     placeholder="Resolved date"
+                    max={new Date().toISOString().split("T")[0]}
                     value={c.resolved_date || ""}
                     onChange={(e) =>
                       setCondition(i, "resolved_date", e.target.value)
@@ -269,6 +271,7 @@ export default function MedicalHistory() {
                   <Input
                     type="date"
                     placeholder="Date *"
+                    max={new Date().toISOString().split("T")[0]}
                     value={s.date}
                     onChange={(e) => setSurgery(i, "date", e.target.value)}
                     className="w-[150px]"

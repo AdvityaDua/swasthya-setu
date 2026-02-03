@@ -206,6 +206,7 @@ const Profile = () => {
                                     value={formData.registration_number}
                                     onChange={handleChange}
                                     placeholder="Medical Council Registration"
+                                    required
                                 />
                             </div>
 
@@ -220,6 +221,7 @@ const Profile = () => {
                                         value={formData.hospital_name}
                                         onChange={handleChange}
                                         placeholder="Hospital Name"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -233,6 +235,7 @@ const Profile = () => {
                                     value={formData.years_of_experience}
                                     onChange={handleChange}
                                     min="0"
+                                    required
                                 />
                             </div>
 

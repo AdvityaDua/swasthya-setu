@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { EmptyState } from "../../components/ui/empty-state";
 import { useGetDoctorConsultationsQuery, useScheduleConsultationMutation, useRejectConsultationMutation, useRescheduleConsultationMutation, useCancelDoctorConsultationMutation } from "../../app/api/doctorApiSlice";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -292,15 +293,11 @@ const DoctorConsultations = () => {
         <CardContent>
           {/* Consultations Table */}
           {filteredConsultations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-dashed">
-              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                <Video className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold">No consultations found</h3>
-              <p className="text-muted-foreground max-w-sm mt-1">
-                You don't have any {selectedStatus !== 'all' && selectedStatus.toLowerCase()} consultations at the moment.
-              </p>
-            </div>
+            <EmptyState
+              title="No consultations found"
+              description={`You don't have any ${selectedStatus !== 'all' ? selectedStatus.toLowerCase() : ''} consultations at the moment.`}
+              icon={Video}
+            />
           ) : (
             <div className="overflow-x-auto rounded-lg border bg-background">
               <Table>
@@ -381,24 +378,28 @@ const DoctorConsultations = () => {
                                       Select a date and time for the consultation with {consultation.patient_name}
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <div className="space-y-4 pt-4">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="datetime">Date & Time</Label>
-                                      <Input
-                                        id="datetime"
-                                        type="datetime-local"
-                                        value={scheduleDialog.scheduled_time}
-                                        onChange={(e) => setScheduleDialog({ ...scheduleDialog, scheduled_time: e.target.value })}
-                                      />
+                                  <form onSubmit={(e) => { e.preventDefault(); handleSchedule(); }}>
+                                    <div className="space-y-4 pt-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor="datetime">Date & Time</Label>
+                                        <Input
+                                          id="datetime"
+                                          type="datetime-local"
+                                          value={scheduleDialog.scheduled_time}
+                                          onChange={(e) => setScheduleDialog({ ...scheduleDialog, scheduled_time: e.target.value })}
+                                          min={new Date().toISOString().slice(0, 16)}
+                                          required
+                                        />
+                                      </div>
+                                      <Button
+                                        type="submit"
+                                        disabled={isScheduling || isProcessing}
+                                        className="w-full bg-green-600 hover:bg-green-700"
+                                      >
+                                        {isScheduling || isProcessing ? 'Scheduling...' : 'Confirm Schedule'}
+                                      </Button>
                                     </div>
-                                    <Button
-                                      onClick={handleSchedule}
-                                      disabled={isScheduling || isProcessing}
-                                      className="w-full bg-green-600 hover:bg-green-700"
-                                    >
-                                      {isScheduling || isProcessing ? 'Scheduling...' : 'Confirm Schedule'}
-                                    </Button>
-                                  </div>
+                                  </form>
                                 </DialogContent>
                               </Dialog>
 
@@ -426,27 +427,29 @@ const DoctorConsultations = () => {
                                       Provide a reason for rejecting this consultation request
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <div className="space-y-4 pt-4">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="reason">Reason (optional)</Label>
-                                      <textarea
-                                        id="reason"
-                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        placeholder="Why are you rejecting this consultation?"
-                                        value={rejectDialog.reason}
-                                        onChange={(e) => setRejectDialog({ ...rejectDialog, reason: e.target.value })}
-                                        rows="3"
-                                      />
+                                  <form onSubmit={(e) => { e.preventDefault(); handleReject(); }}>
+                                    <div className="space-y-4 pt-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor="reason">Reason (optional)</Label>
+                                        <textarea
+                                          id="reason"
+                                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                          placeholder="Why are you rejecting this consultation?"
+                                          value={rejectDialog.reason}
+                                          onChange={(e) => setRejectDialog({ ...rejectDialog, reason: e.target.value })}
+                                          rows="3"
+                                        />
+                                      </div>
+                                      <Button
+                                        type="submit"
+                                        disabled={isRejecting}
+                                        variant="destructive"
+                                        className="w-full"
+                                      >
+                                        {isRejecting ? 'Rejecting...' : 'Confirm Rejection'}
+                                      </Button>
                                     </div>
-                                    <Button
-                                      onClick={handleReject}
-                                      disabled={isRejecting}
-                                      variant="destructive"
-                                      className="w-full"
-                                    >
-                                      {isRejecting ? 'Rejecting...' : 'Confirm Rejection'}
-                                    </Button>
-                                  </div>
+                                  </form>
                                 </DialogContent>
                               </Dialog>
                             </>
@@ -490,24 +493,28 @@ const DoctorConsultations = () => {
                                       Select a new date and time for the consultation
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <div className="space-y-4 pt-4">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="new-datetime">New Date & Time</Label>
-                                      <Input
-                                        id="new-datetime"
-                                        type="datetime-local"
-                                        value={rescheduleDialog.newTime}
-                                        onChange={(e) => setRescheduleDialog({ ...rescheduleDialog, newTime: e.target.value })}
-                                      />
+                                  <form onSubmit={(e) => { e.preventDefault(); handleReschedule(); }}>
+                                    <div className="space-y-4 pt-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor="new-datetime">New Date & Time</Label>
+                                        <Input
+                                          id="new-datetime"
+                                          type="datetime-local"
+                                          value={rescheduleDialog.newTime}
+                                          onChange={(e) => setRescheduleDialog({ ...rescheduleDialog, newTime: e.target.value })}
+                                          min={new Date().toISOString().slice(0, 16)}
+                                          required
+                                        />
+                                      </div>
+                                      <Button
+                                        type="submit"
+                                        disabled={isRescheduling}
+                                        className="w-full"
+                                      >
+                                        {isRescheduling ? 'Rescheduling...' : 'Confirm Reschedule'}
+                                      </Button>
                                     </div>
-                                    <Button
-                                      onClick={handleReschedule}
-                                      disabled={isRescheduling}
-                                      className="w-full"
-                                    >
-                                      {isRescheduling ? 'Rescheduling...' : 'Confirm Reschedule'}
-                                    </Button>
-                                  </div>
+                                  </form>
                                 </DialogContent>
                               </Dialog>
 

@@ -326,20 +326,20 @@
 
 ### 3.2 Form Validations
 
-- [ ] Add phone number format validation (10 digits) in registration
-- [ ] Add ABHA ID format validation (xxxx-xxxx-xxxx-xxxx pattern)
-- [ ] Add password strength validation in registration
-- [ ] Add file type validation for diagnostic image uploads (DICOM, PNG, JPG)
-- [ ] Add file size limit validation for uploads
-- [ ] Add required field validation for clinical context form
+- [x] Add phone number format validation (10 digits) in registration
+- [x] Add ABHA ID format validation (xxxx-xxxx-xxxx-xxxx pattern)
+- [x] Add password strength validation in registration
+- [x] Add file type validation for diagnostic image uploads (DICOM, PNG, JPG)
+- [x] Add file size limit validation for uploads
+- [x] Add required field validation for clinical context form
 
 ### 3.3 Error Handling
 
-- [ ] Add global error boundary component in React
-- [ ] Implement consistent error message display across all forms
-- [ ] Add network error retry logic for API calls
-- [ ] Handle 403 Forbidden errors with appropriate user feedback
-- [ ] Add empty state handling for all list views
+- [x] Add global error boundary component in React
+- [x] Implement consistent error message display across all forms
+- [x] Add network error retry logic for API calls
+- [x] Handle 403 Forbidden errors with appropriate user feedback
+- [x] Add empty state handling for all list views
 
 ### 3.4 Backend Validations
 

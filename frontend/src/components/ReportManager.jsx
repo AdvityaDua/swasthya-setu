@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -21,6 +21,14 @@ const ReportManager = ({ testId, initialLanguage = "en", reportUrl: initialRepor
     // For initial load, we might rely on the prop or construct it if predictable.
     // Let's rely on state which can be updated.
     const [currentReportUrl, setCurrentReportUrl] = useState(initialReportUrl);
+    // Sync state with prop updates (e.g. when parent TestWorkflow gets new AI result)
+
+    useEffect(() => {
+        if (initialReportUrl) {
+            setCurrentReportUrl(initialReportUrl);
+        }
+    }, [initialReportUrl]);
+
     const [notification, setNotification] = useState(null);
 
     const [regenerateReport, { isLoading }] = useRegenerateReportMutation();
@@ -109,7 +117,7 @@ const ReportManager = ({ testId, initialLanguage = "en", reportUrl: initialRepor
                     size="sm"
                     onClick={handleViewReport}
                     className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
-                    disabled={!currentReportUrl && !isLoading} // Enable if we have a URL
+                    disabled={isLoading} // Disable if no URL OR loading
                 >
                     <FileText className="h-3 w-3 mr-1" />
                     View PDF

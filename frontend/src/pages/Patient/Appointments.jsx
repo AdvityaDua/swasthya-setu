@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { EmptyState } from "../../components/ui/empty-state";
 import {
   useGetPatientAppointmentsQuery,
   useBookAppointmentMutation,
@@ -19,6 +20,11 @@ import {
 } from "../../components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 import { Loader2, Plus, AlertCircle, CheckCircle2, Calendar, MapPin } from "lucide-react";
+
+import Map, { Marker } from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 const Appointments = () => {
   const { data: appointments, isLoading: appointmentsLoading, isSuccess } = useGetPatientAppointmentsQuery();
@@ -206,16 +212,24 @@ const Appointments = () => {
                       Latitude: {selectedPractitionerForMap.latitude.toFixed(6)} | Longitude:{" "}
                       {selectedPractitionerForMap.longitude.toFixed(6)}
                     </p>
-                    <iframe
-                      width="100%"
-                      height="300"
-                      frameBorder="0"
-                      src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyDxD82TSVql_xB6rw4S6i-MUztZptxaaDk&q=${selectedPractitionerForMap.latitude},${selectedPractitionerForMap.longitude}`}
-                      allowFullScreen=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      className="rounded-lg"
-                    ></iframe>
+                    <div className="h-[300px] w-full rounded-lg overflow-hidden relative">
+                      <Map
+                        initialViewState={{
+                          longitude: selectedPractitionerForMap.longitude,
+                          latitude: selectedPractitionerForMap.latitude,
+                          zoom: 14,
+                        }}
+                        style={{ width: "100%", height: "100%" }}
+                        mapStyle="mapbox://styles/mapbox/streets-v12"
+                        mapboxAccessToken={MAPBOX_TOKEN}
+                      >
+                        <Marker
+                          longitude={selectedPractitionerForMap.longitude}
+                          latitude={selectedPractitionerForMap.latitude}
+                          color="#3b82f6"
+                        />
+                      </Map>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -246,138 +260,141 @@ const Appointments = () => {
         </div>
       )}
 
+
       {/* Book Appointment Form Card */}
-      {!showBookForm ? (
-        <Button
-          onClick={() => setShowBookForm(true)}
-          className="w-full md:w-auto gap-2"
-          size="lg"
-        >
-          <Plus className="h-4 w-4" />
-          Book New Appointment
-        </Button>
-      ) : (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Book Diagnostic Appointment
-            </CardTitle>
-            <CardDescription>
-              Schedule a diagnostic appointment at a nearby center
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Appointment Type (Fixed) */}
-            <div className="space-y-2">
-              <Label htmlFor="appointment_type">Appointment Type</Label>
-              <Input
-                id="appointment_type"
-                type="text"
-                value="Diagnostic"
-                disabled
-                className="bg-slate-100"
-              />
-            </div>
+      {
+        !showBookForm ? (
+          <Button
+            onClick={() => setShowBookForm(true)}
+            className="w-full md:w-auto gap-2"
+            size="lg"
+          >
+            <Plus className="h-4 w-4" />
+            Book New Appointment
+          </Button>
+        ) : (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Book Diagnostic Appointment
+              </CardTitle>
+              <CardDescription>
+                Schedule a diagnostic appointment at a nearby center
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Appointment Type (Fixed) */}
+              <div className="space-y-2">
+                <Label htmlFor="appointment_type">Appointment Type</Label>
+                <Input
+                  id="appointment_type"
+                  type="text"
+                  value="Diagnostic"
+                  disabled
+                  className="bg-slate-100"
+                />
+              </div>
 
-            {/* Practitioner Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="practitioner_id">
-                Select Diagnostic Center *
-              </Label>
-              {practitionersLoading ? (
-                <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading centers...
-                </div>
-              ) : practitioners && practitioners.length > 0 ? (
-                <Select
-                  value={formData.practitioner_id}
-                  onValueChange={(value) => handleFormChange("practitioner_id", value)}
-                >
-                  <SelectTrigger id="practitioner_id">
-                    <SelectValue placeholder="Choose a diagnostic center" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {practitioners.map((practitioner) => (
-                      <SelectItem key={practitioner.id} value={practitioner.id}>
-                        <div className="flex flex-col gap-1">
-                          <span className="font-medium">{practitioner.center_name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {practitioner.center_location}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    No diagnostic centers available at the moment.
-                  </AlertDescription>
-                </Alert>
-              )}
-              {validationErrors.practitioner_id && (
-                <p className="text-sm text-destructive">{validationErrors.practitioner_id}</p>
-              )}
-            </div>
-
-            {/* Date & Time Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="scheduled_time">Preferred Date & Time *</Label>
-              <Input
-                id="scheduled_time"
-                type="datetime-local"
-                value={formData.scheduled_time}
-                onChange={(e) => handleFormChange("scheduled_time", e.target.value)}
-                min={getMinDateTime()}
-                className={validationErrors.scheduled_time ? "border-destructive" : ""}
-              />
-              {validationErrors.scheduled_time && (
-                <p className="text-sm text-destructive">{validationErrors.scheduled_time}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Please select a date and time at least 30 minutes from now
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                onClick={handleBookAppointment}
-                disabled={bookingInProgress}
-                className="flex-1"
-              >
-                {bookingInProgress ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Booking...
-                  </>
+              {/* Practitioner Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="practitioner_id">
+                  Select Diagnostic Center *
+                </Label>
+                {practitionersLoading ? (
+                  <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading centers...
+                  </div>
+                ) : practitioners && practitioners.length > 0 ? (
+                  <Select
+                    value={formData.practitioner_id}
+                    onValueChange={(value) => handleFormChange("practitioner_id", value)}
+                  >
+                    <SelectTrigger id="practitioner_id">
+                      <SelectValue placeholder="Choose a diagnostic center" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {practitioners.map((practitioner) => (
+                        <SelectItem key={practitioner.id} value={practitioner.id}>
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium">{practitioner.center_name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {practitioner.center_location}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
-                  "Confirm Booking"
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      No diagnostic centers available at the moment.
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowBookForm(false);
-                  setValidationErrors({});
-                  setFormData({
-                    appointment_type: "DIAGNOSTIC",
-                    scheduled_time: "",
-                    practitioner_id: "",
-                  });
-                }}
-                variant="outline"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                {validationErrors.practitioner_id && (
+                  <p className="text-sm text-destructive">{validationErrors.practitioner_id}</p>
+                )}
+              </div>
+
+              {/* Date & Time Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="scheduled_time">Preferred Date & Time *</Label>
+                <Input
+                  id="scheduled_time"
+                  type="datetime-local"
+                  value={formData.scheduled_time}
+                  onChange={(e) => handleFormChange("scheduled_time", e.target.value)}
+                  min={getMinDateTime()}
+                  className={validationErrors.scheduled_time ? "border-destructive" : ""}
+                />
+                {validationErrors.scheduled_time && (
+                  <p className="text-sm text-destructive">{validationErrors.scheduled_time}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Please select a date and time at least 30 minutes from now
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleBookAppointment}
+                  disabled={bookingInProgress}
+                  className="flex-1"
+                >
+                  {bookingInProgress ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Booking...
+                    </>
+                  ) : (
+                    "Confirm Booking"
+                  )}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowBookForm(false);
+                    setValidationErrors({});
+                    setFormData({
+                      appointment_type: "DIAGNOSTIC",
+                      scheduled_time: "",
+                      practitioner_id: "",
+                    });
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      }
 
       {/* Appointments List */}
       <Card>
@@ -389,13 +406,15 @@ const Appointments = () => {
         </CardHeader>
         <CardContent>
           {isSuccess && appointments && appointments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Calendar className="h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-semibold">No appointments yet</p>
-              <p className="text-sm">
-                Book your first appointment to get started with diagnostic tests
-              </p>
-            </div>
+            <EmptyState
+              title="No appointments yet"
+              description="Book your first appointment to get started with diagnostic tests"
+              icon={Calendar}
+              action={{
+                label: "Book New Appointment",
+                onClick: () => setShowBookForm(true)
+              }}
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -440,7 +459,7 @@ const Appointments = () => {
                         <TableCell className="text-right">
                           {appointment.practitioner_center && (
                             <Button
-                              variant="ghost"
+                              variant="default"
                               size="sm"
                               className="gap-2"
                               onClick={() => {
@@ -465,7 +484,7 @@ const Appointments = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </div >
   );
 };
 

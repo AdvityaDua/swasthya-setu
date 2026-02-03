@@ -40,6 +40,7 @@ class DoctorCaseDetailSerializer(serializers.ModelSerializer):
     patient_gender = serializers.CharField(source="patient.gender", read_only=True)
     ai_result = serializers.SerializerMethodField()
     review_details = serializers.SerializerMethodField()
+    report_pdf = serializers.SerializerMethodField()
 
     class Meta:
         model = DiagnosticTest
@@ -56,8 +57,24 @@ class DoctorCaseDetailSerializer(serializers.ModelSerializer):
             "raw_image",
             "ai_result",
             "clinical_context",
+            "ai_result",
+            "clinical_context",
             "review_details",
+            "report_pdf",
         ]
+
+    def get_report_pdf(self, obj):
+        request = self.context.get('request')
+        try:
+            from core.models import DiagnosticReport
+            report = DiagnosticReport.objects.filter(test=obj).first()
+            if report and report.report_pdf:
+                if request:
+                    return request.build_absolute_uri(report.report_pdf.url)
+                return report.report_pdf.url
+            return None
+        except Exception:
+            return None
 
     classes = ["Pneumonia", "Covid-19", "Normal"] # Example classes
 

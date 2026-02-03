@@ -169,9 +169,37 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # Media files (uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Cloudflare R2 / AWS S3 Configuration
+AWS_ACCESS_KEY_ID = os.getenv('R2_ACCESS_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('R2_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'swasthya-setu')
+AWS_S3_ENDPOINT_URL = os.getenv('R2_URL')
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_DEFAULT_ACL = None  # R2 doesn't support ACLs
 
-# Additionally expose reports under /reports/ for backward-compatible links
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": AWS_ACCESS_KEY_ID,
+            "secret_key": AWS_SECRET_ACCESS_KEY,
+            "bucket_name": "swasthya-setu",
+            "endpoint_url": AWS_S3_ENDPOINT_URL,
+            "signature_version": "s3v4",
+            "default_acl": None,
+            "querystring_auth": True, # Needed for private buckets if any
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# Keep MEDIA_URL for backward compatibility if needed, though usually S3Boto3Storage handles it
+MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/swasthya-setu/'
+
+# Reports URL - we might need to adjust how we serve these if they are private
 REPORTS_URL = '/reports/'
-REPORTS_ROOT = os.path.join(MEDIA_ROOT, 'reports')
