@@ -377,9 +377,13 @@ const CaseDetail = () => {
                                         <div className="p-3 bg-muted/30 rounded-lg space-y-1">
                                             <p className="text-xs font-semibold uppercase text-muted-foreground">Symptoms</p>
                                             <div className="flex flex-wrap gap-1">
-                                                {Object.entries(caseDetail.clinical_context.symptoms || {}).map(([key, val]) => (
-                                                    val && <Badge key={key} variant="secondary" className="text-xs">{key.replace(/_/g, ' ')}</Badge>
-                                                ))}
+                                                {typeof caseDetail.clinical_context.symptoms === 'string' ? (
+                                                    <p className="text-sm text-foreground whitespace-pre-wrap">{caseDetail.clinical_context.symptoms}</p>
+                                                ) : (
+                                                    Object.entries(caseDetail.clinical_context.symptoms || {}).map(([key, val]) => (
+                                                        val && <Badge key={key} variant="secondary" className="text-xs">{key.replace(/_/g, ' ')}</Badge>
+                                                    ))
+                                                )}
                                             </div>
                                         </div>
                                         <div className="p-3 bg-muted/30 rounded-lg space-y-1">
@@ -396,10 +400,43 @@ const CaseDetail = () => {
                                     </div>
                                     <div className="p-3 bg-muted/30 rounded-lg space-y-1">
                                         <p className="text-xs font-semibold uppercase text-muted-foreground">Patient History</p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {/* Render simplified history or check JSON structure */}
-                                            {JSON.stringify(caseDetail.clinical_context.history || "No history available").slice(0, 100)}...
-                                        </p>
+                                        <div className="text-sm text-foreground whitespace-pre-wrap">
+                                            {caseDetail.clinical_context.history ? (
+                                                typeof caseDetail.clinical_context.history === 'string' ? (
+                                                    caseDetail.clinical_context.history
+                                                ) : Array.isArray(caseDetail.clinical_context.history) ? (
+                                                    <ul className="list-disc pl-4 space-y-1">
+                                                        {caseDetail.clinical_context.history.map((item, i) => (
+                                                            <li key={i}>{item}</li>
+                                                        ))}
+                                                    </ul>
+                                                ) : typeof caseDetail.clinical_context.history === 'object' ? (
+                                                    // Object case: e.g. {past_surgeries: null, ...}
+                                                    <div className="space-y-2">
+                                                        {Object.entries(caseDetail.clinical_context.history).map(([key, value]) => {
+                                                            if (!value) return null; // Skip null/empty
+                                                            return (
+                                                                <div key={key} className="grid grid-cols-1 sm:grid-cols-3 gap-1 border-b border-border/50 pb-1 last:border-0 last:pb-0">
+                                                                    <span className="font-semibold text-muted-foreground capitalize text-xs">
+                                                                        {key.replace(/_/g, ' ')}
+                                                                    </span>
+                                                                    <span className="sm:col-span-2 text-foreground break-words">
+                                                                        {typeof value === 'object' ? JSON.stringify(value) : value.toString()}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        {Object.values(caseDetail.clinical_context.history).every(v => !v) && (
+                                                            <span className="text-muted-foreground italic text-xs">No specific history recorded.</span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span>{JSON.stringify(caseDetail.clinical_context.history)}</span>
+                                                )
+                                            ) : (
+                                                <span className="text-muted-foreground italic">No history available</span>
+                                            )}
+                                        </div>
                                     </div>
                                 </>
                             ) : (

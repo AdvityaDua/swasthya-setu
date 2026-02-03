@@ -109,6 +109,10 @@ def run_ai_and_generate_report(test, target_lang="en"):
         # Save heatmap
         if "overlay" in result and result["overlay"] is not None:
              overlay_uint8 = (result["overlay"] * 255).astype("uint8")
+             
+             # Convert RGB (from inference) to BGR (for OpenCV)
+             overlay_uint8 = cv2.cvtColor(overlay_uint8, cv2.COLOR_RGB2BGR)
+             
              _, buffer = cv2.imencode(".png", overlay_uint8)
 
              ai_result.heatmap_image.save(

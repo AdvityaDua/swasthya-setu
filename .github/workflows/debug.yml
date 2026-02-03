@@ -1,2 +1,0 @@
-- name: Debugging
-  run: echo "Workflow triggered successfully"

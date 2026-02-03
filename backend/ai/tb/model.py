@@ -2,18 +2,16 @@ import torch
 import torch.nn as nn
 import timm
 
-class TBModel(nn.Module):
+class HybridCNNTransformer(nn.Module):
     def __init__(self, num_classes=3):
         super().__init__()
 
-        # ResNet50 backbone (num_classes=0 for feature extraction)
         self.backbone = timm.create_model(
             "resnet50",
             pretrained=False,
             num_classes=0
         )
 
-        # Transformer Encoder
         self.transformer = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
                 d_model=2048,
@@ -25,7 +23,7 @@ class TBModel(nn.Module):
             num_layers=2
         )
 
-        # Classifier head
+        # 🔴 EXACT SAME classifier as training
         self.classifier = nn.Sequential(
             nn.Linear(2048, 512),
             nn.ReLU(),
@@ -33,9 +31,13 @@ class TBModel(nn.Module):
             nn.Linear(512, num_classes)
         )
 
+    # 🔥 expose spatial features
+    def forward_features(self, x):
+        return self.backbone.forward_features(x)  # (B,2048,7,7)
+
     def forward(self, x):
-        # x: (B, 3, 224, 224)
-        x = self.backbone(x)       # (B, 2048)
-        x = x.unsqueeze(1)         # (B, 1, 2048)
-        x = self.transformer(x)    # (B, 1, 2048)
-        return self.classifier(x[:, 0]) # (B, num_classes)
+        feats = self.forward_features(x)
+        pooled = feats.mean(dim=[2,3])
+        tokens = pooled.unsqueeze(1)
+        tokens = self.transformer(tokens)
+        return self.classifier(tokens[:,0])
