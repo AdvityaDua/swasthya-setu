@@ -22,6 +22,6 @@ jobs:
           script: |
             cd ${{ secrets.DO_PATH }}
             git pull origin main
-            source venv/bin/activate
+            source backend/venv/bin/activate
             pip install -r requirements.txt
             sudo systemctl restart backend.service
