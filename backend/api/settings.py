@@ -45,11 +45,15 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    'api.swasthya-setu.advitya-dua.dev',
+    '209.38.120.104'
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "https://swasthya-setu.advitya-dua.dev",
+    "https://api.swasthya-setu.advitya-dua.dev",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
