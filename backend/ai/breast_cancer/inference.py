@@ -40,7 +40,7 @@ def predict_breast_cancer(dicom_or_image_path, model_path, device="cpu"):
     tensor = torch.tensor(image).unsqueeze(0).repeat(3, 1, 1).unsqueeze(0).to(device)
 
     model = BreastCancerModel(num_classes=2).to(device)
-    checkpoint = torch.load(model_path, map_location=device)
+    checkpoint = torch.load(model_path, map_location=device, weights_only=False)
 
     state_dict = {k.replace("model.", ""): v for k, v in checkpoint["model_state_dict"].items()}
     model.model.load_state_dict(state_dict, strict=False)

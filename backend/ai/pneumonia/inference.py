@@ -119,7 +119,8 @@ def _load_pneumonia_model(model_path, device):
     # Load state_dict safely on CPU
     state_dict = torch.load(
         model_path,
-        map_location="cpu"
+        map_location="cpu",
+        weights_only=False
     )
 
     model.load_state_dict(state_dict)

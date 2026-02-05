@@ -28,7 +28,7 @@ def _load_tb_model(model_path, device):
     model = HybridCNNTransformer(num_classes=3)
     
     # Load state_dict safely
-    state_dict = torch.load(model_path, map_location="cpu")
+    state_dict = torch.load(model_path, map_location="cpu", weights_only=False)
     model.load_state_dict(state_dict)
     
     model = model.to(device)

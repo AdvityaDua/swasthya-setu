@@ -97,7 +97,7 @@ def predict_hairline_fracture(image_path, model_path=None, save_dir=None):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(current_dir, "../../core/model/hairline.pkl")
 
-    state_dict = torch.load(model_path, map_location=device)
+    state_dict = torch.load(model_path, map_location=device, weights_only=False)
     model.load_state_dict(state_dict)
     model = model.to(device)
     model.eval()
