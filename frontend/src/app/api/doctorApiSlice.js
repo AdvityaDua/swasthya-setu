@@ -18,10 +18,10 @@ export const doctorApiSlice = apiSlice.injectEndpoints({
       keepUnusedDataFor: 0,
     }),
     scheduleConsultation: builder.mutation({
-      query: ({ consultation_id, scheduled_time, meet_link }) => ({
+      query: ({ consultation_id, scheduled_time, meet_link, calendar_event_id }) => ({
         url: `doctor/consultations/${consultation_id}/schedule/`,
         method: "POST",
-        body: { scheduled_time, meet_link },
+        body: { scheduled_time, meet_link, calendar_event_id },
       }),
       invalidatesTags: ["DoctorConsultations"],
     }),

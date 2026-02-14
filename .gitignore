@@ -35,3 +35,4 @@ dist-ssr
 credentials/
 github_actions_backend
 github_actions_backend.pub
+test/

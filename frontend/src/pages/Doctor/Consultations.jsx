@@ -101,7 +101,10 @@ const DoctorConsultations = () => {
 
       const data = await response.json();
       console.log("Google Calendar API Response:", data);
-      return data.hangoutLink || data.htmlLink; // Return the generated Meet link or Event link
+      return {
+        meetLink: data.hangoutLink || data.htmlLink,
+        calendarEventId: data.id
+      };
     } catch (error) {
       console.error('Calendar API Error:', error);
       return null;
@@ -117,19 +120,27 @@ const DoctorConsultations = () => {
     // 1. Create Event on Google Calendar
     try {
       // Show some loading indicator if we could... generic "Scheduling..." text will appear on button
-      const meetLink = await createCalendarEvent(token, scheduleDialog.consultation, scheduleDialog.scheduled_time);
+      const eventData = await createCalendarEvent(token, scheduleDialog.consultation, scheduleDialog.scheduled_time);
+
+      if (!eventData) {
+        throw new Error("Failed to create calendar event");
+      }
+
+      const { meetLink, calendarEventId } = eventData;
 
       // 2. Save to Backend
       console.log("Sending to backend:", {
         consultation_id: scheduleDialog.consultation.id,
         scheduled_time: new Date(scheduleDialog.scheduled_time).toISOString(),
         meet_link: meetLink,
+        calendar_event_id: calendarEventId
       });
 
       await scheduleConsultation({
         consultation_id: scheduleDialog.consultation.id,
         scheduled_time: new Date(scheduleDialog.scheduled_time).toISOString(),
         meet_link: meetLink,
+        calendar_event_id: calendarEventId
       }).unwrap();
 
       setScheduleDialog({ open: false, consultation: null, scheduled_time: "" });

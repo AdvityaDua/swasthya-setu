@@ -1,4 +1,4 @@
-import { fetchBaseQuery, createApi, retry } from '@reduxjs/toolkit/query/react'
+import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react'
 import { login as loginAction, logout, removeToken } from '../slices/userSlice'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.swasthya-setu.advitya-dua.dev/api/';
@@ -52,11 +52,11 @@ const baseQueryWithRefresh = async (args, api, extraOptions) => {
     return result;
 }
 
-const staggeredBaseQuery = retry(baseQueryWithRefresh, { maxRetries: 3 });
+
 
 export const apiSlice = createApi({
     reducerPath: 'api',
-    baseQuery: staggeredBaseQuery,
+    baseQuery: baseQueryWithRefresh,
     tagTypes: ["User", "Order", "Inventory", "Medicine", "Sale", "PatientProfile"],
     endpoints: (builder) => ({
     })

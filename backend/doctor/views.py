@@ -173,37 +173,46 @@ class DoctorConsultationScheduleView(APIView):
         
         scheduled_time = serializer.validated_data['scheduled_time']
         manual_link = serializer.validated_data.get('meet_link')
+        calendar_event_id = serializer.validated_data.get('calendar_event_id')
         
         print(f"DEBUG: Manual Link received: {manual_link}")
+        print(f"DEBUG: Calendar Event ID received: {calendar_event_id}")
 
-        # Create Google Calendar event
-        doctor_email = request.user.email
-        patient_email = consultation.patient.user.email
-        patient_name = consultation.patient.user.full_name
-        
-        # Try to create calendar event regardless (for tracking), but use manual link if provided
-        calendar_result = create_consultation_event(
-            doctor_email=doctor_email,
-            patient_email=patient_email,
-            patient_name=patient_name,
-            scheduled_time=scheduled_time,
-            consultation_request_id=str(consultation.id)
-        )
-        
-        print(f"DEBUG: Calendar Result: {calendar_result}")
+        final_link = manual_link
+        final_event_id = calendar_event_id
 
-        # We don't fail strictly if calendar fails, as long as we have a link or plan to just schedule
-        # However, if calendar fails, we log it.
-        
-        generated_link = calendar_result.get('meet_link')
-        final_link = manual_link if manual_link else generated_link
+        # If we have both link and event ID from frontend, we trust it and skip backend creation
+        if not (manual_link and calendar_event_id):
+            # Create Google Calendar event on backend if not provided by frontend
+            doctor_email = request.user.email
+            patient_email = consultation.patient.user.email
+            patient_name = consultation.patient.user.full_name
+            
+            # Try to create calendar event regardless (for tracking), but use manual link if provided
+            calendar_result = create_consultation_event(
+                doctor_email=doctor_email,
+                patient_email=patient_email,
+                patient_name=patient_name,
+                scheduled_time=scheduled_time,
+                consultation_request_id=str(consultation.id)
+            )
+            
+            print(f"DEBUG: Calendar Result: {calendar_result}")
+
+            # We don't fail strictly if calendar fails, as long as we have a link or plan to just schedule
+            # However, if calendar fails, we log it.
+            
+            generated_link = calendar_result.get('meet_link')
+            final_link = manual_link if manual_link else generated_link
+            final_event_id = calendar_result.get('calendar_event_id')
         
         print(f"DEBUG: Final Link to save: {final_link}")
+        print(f"DEBUG: Final Event ID to save: {final_event_id}")
 
         # Update consultation with meeting details
         consultation.scheduled_time = scheduled_time
         consultation.meet_link = final_link
-        consultation.calendar_event_id = calendar_result.get('calendar_event_id')
+        consultation.calendar_event_id = final_event_id
         consultation.status = 'SCHEDULED'
         consultation.save()
         

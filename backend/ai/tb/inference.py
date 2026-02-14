@@ -27,6 +27,16 @@ def _load_tb_model(model_path, device):
 
     model = HybridCNNTransformer(num_classes=3)
     
+    # Check for Git LFS pointer
+    try:
+        if os.path.exists(model_path) and os.path.getsize(model_path) < 2048:
+            with open(model_path, 'r', errors='ignore') as f:
+                content = f.read(20)
+                if content.startswith('version https://git-lfs'):
+                    raise RuntimeError(f"Model file at {model_path} is a Git LFS pointer. Please run 'git lfs pull' on the server.")
+    except Exception:
+        pass # Ignore permission errors etc, let torch.load fail naturally if not LFS
+
     # Load state_dict safely
     state_dict = torch.load(model_path, map_location="cpu", weights_only=False)
     model.load_state_dict(state_dict)
