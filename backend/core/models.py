@@ -331,3 +331,13 @@ class ConsultationRequest(models.Model):
 
     def __str__(self):
         return f"Consultation {self.patient.user.full_name} – {self.doctor.user.full_name} ({self.status})"
+
+class MeetingTranscript(models.Model):
+    consultation = models.OneToOneField(ConsultationRequest, on_delete=models.CASCADE, related_name='transcript')
+    transcript_data = models.JSONField(null=True, blank=True) # To store diarized JSON
+    transcript_text = models.TextField(null=True, blank=True) # Full text for easy search
+    audio_file = models.FileField(upload_to='meeting_audios/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Transcript for {self.consultation}"

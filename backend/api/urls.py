@@ -7,6 +7,7 @@ urlpatterns = [
     path('api/patient/', include('patient.urls')),
     path('api/practitioner/', include('practitioner.urls')),
     path('api/doctor/', include('doctor.urls')),
+    path('api/chatbot/', include('chatbot.urls')),
 ]
 
 if settings.DEBUG:

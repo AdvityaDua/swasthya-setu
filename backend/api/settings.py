@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'core',
     'doctor',
     'practitioner',
+    'chatbot',
 ]
 
 MIDDLEWARE = [
@@ -207,3 +208,20 @@ MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/swasthya-setu/'
 
 # Reports URL - we might need to adjust how we serve these if they are private
 REPORTS_URL = '/reports/'
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+# Celery Beat Schedule
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'check-upcoming-meetings-every-minute': {
+        'task': 'chatbot.tasks.check_upcoming_meetings',
+        'schedule': crontab(minute='*'),
+    },
+}

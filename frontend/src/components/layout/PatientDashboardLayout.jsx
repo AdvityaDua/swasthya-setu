@@ -1,4 +1,5 @@
 import DashboardLayout from "./DashboardLayout";
+import ChatbotWidget from "../ChatbotWidget";
 import { LayoutDashboard, Stethoscope, FileText, UserIcon, ClipboardList, Calendar, Users, MapPin, Video } from "lucide-react";
 
 const PatientDashboardLayout = () => {
@@ -15,7 +16,10 @@ const PatientDashboardLayout = () => {
   ];
 
   return (
-    <DashboardLayout portalName="Patient Portal" menuItems={patientMenuItems} />
+    <>
+      <DashboardLayout portalName="Patient Portal" menuItems={patientMenuItems} />
+      <ChatbotWidget />
+    </>
   );
 };
 
