@@ -8,7 +8,8 @@ const mime = require('mime-types');
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        headless: false
     }
 });
 
@@ -31,6 +32,10 @@ client.on('message', async (msg) => {
 
         // Check if message has media (e.g., Voice Note)
         if (msg.hasMedia) {
+            console.log("Message Type:", msg.type);
+            console.log("Has Media:", msg.hasMedia);
+            console.log("Body:", msg.body);
+            console.log("Raw:", msg._data);
             const media = await msg.downloadMedia();
 
             // We specifically want Audio / Voice Notes (ptt)
@@ -42,7 +47,7 @@ client.on('message', async (msg) => {
                 let phoneNumber = (contact.id && contact.id.user) || contact.number || msg.from.replace('@c.us', '').replace('@lid', '');
 
 
-                // If it starts with 91 (India), we might strip it to match local DB format, 
+                // If it starts with 91 (India), w`e might strip it to match local DB format, 
                 // but let's pass it raw and let Django handle normalization.
 
                 try {
@@ -63,16 +68,16 @@ client.on('message', async (msg) => {
                         console.log("Audio length:", response.data.reply_audio_base64.length);
                         const { MessageMedia } = require('whatsapp-web.js');
                         const audioBuffer = Buffer.from(response.data.reply_audio_base64, 'base64');
-                        
+
                         // Dynamically determine extension
                         const isOgg = response.data.mime_type === 'audio/ogg';
                         const ext = isOgg ? 'ogg' : 'mp3';
                         const tmpPath = `./temp_reply_${Date.now()}.${ext}`;
-                        
+
                         require('fs').writeFileSync(tmpPath, audioBuffer);
 
                         const replyMedia = MessageMedia.fromFilePath(tmpPath);
-                        
+
                         // WhatsApp requires .ogg Opus to render as a native voice note
                         await client.sendMessage(msg.from, replyMedia, { sendAudioAsVoice: isOgg });
 

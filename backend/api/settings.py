@@ -180,6 +180,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv('R2_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'swasthya-setu')
 AWS_S3_ENDPOINT_URL = os.getenv('R2_URL')
 AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_REGION_NAME = 'auto'
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
@@ -194,6 +195,7 @@ STORAGES = {
             "bucket_name": "swasthya-setu",
             "endpoint_url": AWS_S3_ENDPOINT_URL,
             "signature_version": "s3v4",
+            "region_name": "auto",
             "default_acl": None,
             "querystring_auth": True, # Needed for private buckets if any
         },
